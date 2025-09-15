@@ -13,65 +13,33 @@ export default function ClientProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate loading client data - in real app, this would be an API call
+    // Load client data from API
     const loadClient = async () => {
       setIsLoading(true)
-      await new Promise(resolve => setTimeout(resolve, 800))
-      
-      // Mock client data based on ID
-      const mockClients: Record<string, ClientUser> = {
-        '1': {
-          id: '1',
-          name: 'John Smith',
-          email: 'john@johnsautoshop.com',
-          emailVerified: null,
-          image: null,
-          password: null,
-          role: 'CLIENT',
-          createdAt: new Date('2024-01-15'),
-          updatedAt: new Date('2024-01-15'),
-          businessName: "John's Auto Shop",
-          location: 'Baltimore, MD',
-          phone: '(410) 555-0123',
-          notes: 'Automotive repair shop, 15+ years in business. Specializes in European cars. Very reliable client, always pays on time.',
-          clientSince: new Date('2024-01-15'),
-        },
-        '2': {
-          id: '2',
-          name: 'Sarah Johnson',
-          email: 'sarah@sarahsbakery.com',
-          emailVerified: null,
-          image: null,
-          password: null,
-          role: 'CLIENT',
-          createdAt: new Date('2024-02-01'),
-          updatedAt: new Date('2024-02-01'),
-          businessName: "Sarah's Bakery",
-          location: 'Annapolis, MD',
-          phone: '(410) 555-0456',
-          notes: 'Local bakery specializing in custom cakes and wedding desserts. Growing business with strong social media presence.',
-          clientSince: new Date('2024-02-01'),
-        },
-        '3': {
-          id: '3',
-          name: 'Mike Wilson',
-          email: 'mike@wilsonplumbing.com',
-          emailVerified: null,
-          image: null,
-          password: null,
-          role: 'CLIENT',
-          createdAt: new Date('2024-03-10'),
-          updatedAt: new Date('2024-03-10'),
-          businessName: 'Wilson Plumbing Services',
-          location: 'Columbia, MD',
-          phone: '(410) 555-0789',
-          notes: 'Residential and commercial plumbing services. Family-owned business, second generation. Excellent reputation in the community.',
-          clientSince: new Date('2024-03-10'),
-        },
+      try {
+        const response = await fetch(`/api/clients/${clientId}`)
+        if (response.ok) {
+          const clientData = await response.json()
+          // Convert date strings back to Date objects
+          const processedClient = {
+            ...clientData,
+            createdAt: new Date(clientData.createdAt),
+            updatedAt: new Date(clientData.updatedAt),
+            clientSince: clientData.clientSince ? new Date(clientData.clientSince) : null,
+          }
+          setClient(processedClient)
+        } else if (response.status === 404) {
+          setClient(null)
+        } else {
+          console.error('Failed to fetch client')
+          setClient(null)
+        }
+      } catch (error) {
+        console.error('Error loading client:', error)
+        setClient(null)
+      } finally {
+        setIsLoading(false)
       }
-      
-      setClient(mockClients[clientId] || null)
-      setIsLoading(false)
     }
 
     loadClient()

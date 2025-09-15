@@ -12,6 +12,7 @@ export default function ClientsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'name' | 'businessName' | 'clientSince'>('name')
+  const [deletingClientId, setDeletingClientId] = useState<string | null>(null)
 
   useEffect(() => {
     // Load clients from API
@@ -45,6 +46,32 @@ export default function ClientsPage() {
 
     loadClients()
   }, [])
+
+  const handleDeleteClient = async (clientId: string, clientName: string) => {
+    if (!confirm(`Are you sure you want to delete ${clientName}? This action cannot be undone.`)) {
+      return
+    }
+
+    setDeletingClientId(clientId)
+    try {
+      const response = await fetch(`/api/clients/${clientId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        // Remove the client from the local state
+        setClients(clients.filter(client => client.id !== clientId))
+      } else {
+        const error = await response.json()
+        alert(`Failed to delete client: ${error.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Error deleting client:', error)
+      alert('Failed to delete client. Please try again.')
+    } finally {
+      setDeletingClientId(null)
+    }
+  }
 
   const filteredClients = clients.filter(client =>
     (client.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -190,9 +217,15 @@ export default function ClientsPage() {
                         <Edit className="h-4 w-4" />
                       </Link>
                       <button
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className={`p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ${
+                          deletingClientId === client.id ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                         title="Delete client"
-                        onClick={(e) => e.stopPropagation()}
+                        disabled={deletingClientId === client.id}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteClient(client.id, client.name || 'Unknown Client')
+                        }}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
