@@ -15,19 +15,40 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate loading stats - in real app, this would be an API call
     const loadStats = async () => {
       setIsLoading(true)
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      setStats({
-        totalClients: 12,
-        activeClients: 10,
-        newThisMonth: 3,
-        totalRevenue: 45000,
-      })
-      setIsLoading(false)
+      try {
+        const response = await fetch('/api/admin/stats')
+        if (response.ok) {
+          const data = await response.json()
+          setStats({
+            totalClients: data.totalClients,
+            activeClients: data.activeClients,
+            newThisMonth: data.newThisMonth,
+            totalRevenue: 45000, // Keep mock revenue until FreshBooks integration
+          })
+        } else {
+          console.error('Failed to fetch stats')
+          // Fallback to mock data
+          setStats({
+            totalClients: 0,
+            activeClients: 0,
+            newThisMonth: 0,
+            totalRevenue: 0,
+          })
+        }
+      } catch (error) {
+        console.error('Error loading stats:', error)
+        // Fallback to mock data
+        setStats({
+          totalClients: 0,
+          activeClients: 0,
+          newThisMonth: 0,
+          totalRevenue: 0,
+        })
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     loadStats()

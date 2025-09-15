@@ -26,11 +26,38 @@ export default function ReportsPage() {
   })
 
   useEffect(() => {
-    // Simulate loading reports data
     const loadReports = async () => {
       setIsLoading(true)
-      await new Promise(resolve => setTimeout(resolve, 1200))
-      setIsLoading(false)
+      try {
+        const response = await fetch(`/api/admin/reports?period=${selectedPeriod}`)
+        if (response.ok) {
+          const data = await response.json()
+          setReportData({
+            revenue: {
+              current: data.revenue.current,
+              previous: data.revenue.previous,
+              growth: data.revenue.growth
+            },
+            clients: {
+              total: data.clients.total,
+              new: data.clients.new,
+              active: data.clients.active,
+              retention: data.clients.retention
+            },
+            projects: {
+              completed: data.projects.completed,
+              inProgress: data.projects.inProgress,
+              pending: data.projects.pending
+            }
+          })
+        } else {
+          console.error('Failed to fetch reports data')
+        }
+      } catch (error) {
+        console.error('Error loading reports:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
     loadReports()
   }, [selectedPeriod])
