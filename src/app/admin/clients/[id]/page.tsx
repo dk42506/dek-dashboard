@@ -1,17 +1,19 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ArrowLeft, Edit, Mail, Phone, MapPin, Calendar, FileText, DollarSign, TrendingUp, Globe, Clock } from 'lucide-react'
+import { ArrowLeft, Edit, Mail, Phone, MapPin, Calendar, FileText, DollarSign, TrendingUp, Globe, Clock, Building2, UserCheck, Activity } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ClientUser } from '@/types'
 import NotesSection from '@/components/admin/NotesSection'
+import { getStatusDisplay } from '@/lib/website-monitor'
 
 export default function ClientProfilePage() {
   const params = useParams()
   const clientId = params.id as string
   const [client, setClient] = useState<ClientUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false)
 
   useEffect(() => {
     // Load client data from API
@@ -105,6 +107,33 @@ export default function ClientProfilePage() {
     return `${Math.floor(diffDays / 365)} years`
   }
 
+  const checkWebsiteStatus = async () => {
+    if (!client?.website) return
+    
+    setIsCheckingStatus(true)
+    try {
+      const response = await fetch(`/api/clients/${client.id}/website-status`, {
+        method: 'POST',
+      })
+      
+      if (response.ok) {
+        const statusData = await response.json()
+        // Update the client state with new status
+        setClient(prev => prev ? {
+          ...prev,
+          websiteStatus: statusData.status,
+          lastChecked: new Date(statusData.lastChecked),
+        } : null)
+      } else {
+        console.error('Failed to check website status')
+      }
+    } catch (error) {
+      console.error('Error checking website status:', error)
+    } finally {
+      setIsCheckingStatus(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -187,6 +216,108 @@ export default function ClientProfilePage() {
             </div>
           </div>
 
+          {/* Business Information */}
+          <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 font-heading flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-secondary-500" />
+              Business Information
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex items-center gap-3">
+                <Building2 className="h-4 w-4 text-gray-400" />
+                <div>
+                  <p className="text-sm text-gray-500">Business Type</p>
+                  <p className="text-sm font-medium text-gray-900">{client.businessType || 'Not specified'}</p>
+                </div>
+              </div>
+
+              {client.website && (
+                <div className="flex items-center gap-3">
+                  <Globe className="h-4 w-4 text-gray-400" />
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-500">Website</p>
+                    <div className="flex items-center gap-2">
+                      <a 
+                        href={client.website.startsWith('http') ? client.website : `https://${client.website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                      >
+                        {client.website}
+                      </a>
+                      {client.websiteStatus && (
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusDisplay(client.websiteStatus).bgColor} ${getStatusDisplay(client.websiteStatus).color}`}>
+                          {getStatusDisplay(client.websiteStatus).icon} {getStatusDisplay(client.websiteStatus).text}
+                        </span>
+                      )}
+                    </div>
+                    {client.lastChecked && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        Last checked: {formatDate(new Date(client.lastChecked))}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Representative Contact */}
+          {(client.repName || client.repEmail || client.repPhone) && (
+            <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 font-heading flex items-center gap-2">
+                <UserCheck className="h-5 w-5 text-purple-500" />
+                Representative Contact
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {client.repName && (
+                  <div className="flex items-center gap-3">
+                    <UserCheck className="h-4 w-4 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500">Contact Name</p>
+                      <p className="text-sm font-medium text-gray-900">{client.repName}</p>
+                      {client.repRole && (
+                        <p className="text-xs text-gray-500">{client.repRole}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {client.repEmail && (
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-4 w-4 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500">Contact Email</p>
+                      <a 
+                        href={`mailto:${client.repEmail}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                      >
+                        {client.repEmail}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {client.repPhone && (
+                  <div className="flex items-center gap-3">
+                    <Phone className="h-4 w-4 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500">Contact Phone</p>
+                      <a 
+                        href={`tel:${client.repPhone}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                      >
+                        {client.repPhone}
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Meeting Notes */}
           <NotesSection clientId={client.id} />
 
@@ -251,18 +382,78 @@ export default function ClientProfilePage() {
             </div>
           </div>
 
-          {/* Website Uptime Placeholder */}
+          {/* Website Uptime */}
           <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 font-heading flex items-center gap-2">
               <Globe className="h-5 w-5 text-purple-500" />
-              Website Uptime
+              Website Monitoring
             </h3>
             
-            <div className="text-center py-6">
-              <Globe className="h-10 w-10 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm text-gray-500 mb-1">Uptime Monitoring</p>
-              <p className="text-xs text-gray-400">Coming in Phase 2</p>
-            </div>
+            {client.website ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Status</span>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusDisplay(client.websiteStatus).bgColor} ${getStatusDisplay(client.websiteStatus).color}`}>
+                    {getStatusDisplay(client.websiteStatus).icon} {getStatusDisplay(client.websiteStatus).text}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Website</span>
+                  <a 
+                    href={client.website.startsWith('http') ? client.website : `https://${client.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-blue-600 hover:text-blue-800 truncate max-w-32"
+                    title={client.website}
+                  >
+                    {client.website}
+                  </a>
+                </div>
+                
+                {client.lastChecked && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Last Checked</span>
+                    <span className="text-sm text-gray-900">
+                      {formatDate(new Date(client.lastChecked))}
+                    </span>
+                  </div>
+                )}
+                
+                {client.updownToken && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Monitoring</span>
+                    <span className="text-sm text-green-600 font-medium">
+                      Updown.io Active
+                    </span>
+                  </div>
+                )}
+                
+                <button
+                  onClick={checkWebsiteStatus}
+                  disabled={isCheckingStatus}
+                  className="w-full mt-4 px-3 py-2 text-sm bg-purple-500 hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  {isCheckingStatus ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Checking...
+                    </>
+                  ) : (
+                    <>
+                      <Activity className="h-4 w-4" />
+                      Check Status Now
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <Globe className="h-10 w-10 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 mb-1">No Website Configured</p>
+                <p className="text-xs text-gray-400">Add a website URL to enable monitoring</p>
+              </div>
+            )}
           </div>
 
           {/* Recent Activity */}

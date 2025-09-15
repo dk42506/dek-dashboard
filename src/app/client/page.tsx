@@ -2,38 +2,56 @@
 
 import { useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
-import { Building2, MapPin, Phone, Mail, Calendar, FileText, TrendingUp, Globe } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Building2, MapPin, Phone, Mail, Calendar, FileText, TrendingUp, Globe, UserCheck, Activity } from 'lucide-react'
 import { formatDate, formatPhoneNumber, calculateClientDuration } from '@/lib/utils'
+import { getStatusDisplay } from '@/lib/website-monitor'
 
 export default function ClientDashboard() {
   const { data: session } = useSession()
+  const router = useRouter()
   const [clientData, setClientData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate loading client data - in real app, this would be an API call
     const loadClientData = async () => {
-      setIsLoading(true)
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      if (!session?.user?.id) return
       
-      // Mock client data - in real app, this would come from the database
-      setClientData({
-        name: session?.user?.name || 'Client User',
-        email: session?.user?.email || 'client@example.com',
-        businessName: "John's Auto Shop",
-        location: 'Baltimore, MD',
-        phone: '(410) 555-0123',
-        clientSince: new Date('2023-06-15'),
-        notes: 'Automotive repair shop, needs website redesign and SEO optimization.',
-      })
-      setIsLoading(false)
+      setIsLoading(true)
+      try {
+        const response = await fetch(`/api/clients/${session.user.id}`)
+        if (response.ok) {
+          const data = await response.json()
+          // Convert date strings back to Date objects
+          const processedData = {
+            ...data,
+            createdAt: data.createdAt ? new Date(data.createdAt) : null,
+            updatedAt: data.updatedAt ? new Date(data.updatedAt) : null,
+            clientSince: data.clientSince ? new Date(data.clientSince) : null,
+            lastChecked: data.lastChecked ? new Date(data.lastChecked) : null,
+          }
+          setClientData(processedData)
+          
+          // Check if user needs to change password (new users without passwordChanged flag)
+          if (!data.passwordChanged) {
+            router.push('/auth/change-password')
+            return
+          }
+        } else {
+          console.error('Failed to fetch client data')
+        }
+      } catch (error) {
+        console.error('Error loading client data:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     if (session) {
       loadClientData()
     }
-  }, [session])
+  }, [session, router])
+
 
   const placeholderSections = [
     {
@@ -87,65 +105,153 @@ export default function ClientDashboard() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Building2 className="h-5 w-5 text-primary-500" />
-                <div>
-                  <p className="text-sm text-gray-600">Business Name</p>
-                  <p className="font-medium text-gray-900">
-                    {clientData?.businessName || 'Not specified'}
-                  </p>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Building2 className="h-5 w-5 text-primary-500" />
+                  <div>
+                    <p className="text-sm text-gray-600">Business Name</p>
+                    <p className="font-medium text-gray-900">
+                      {clientData?.businessName || 'Not specified'}
+                    </p>
+                    {clientData?.businessType && (
+                      <p className="text-xs text-gray-500">{clientData.businessType}</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-5 w-5 text-primary-500" />
+                  <div>
+                    <p className="text-sm text-gray-600">Location</p>
+                    <p className="font-medium text-gray-900">
+                      {clientData?.location || 'Not specified'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <Phone className="h-5 w-5 text-primary-500" />
+                  <div>
+                    <p className="text-sm text-gray-600">Phone</p>
+                    <p className="font-medium text-gray-900">
+                      {clientData?.phone ? formatPhoneNumber(clientData.phone) : 'Not specified'}
+                    </p>
+                  </div>
                 </div>
               </div>
               
-              <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-primary-500" />
-                <div>
-                  <p className="text-sm text-gray-600">Location</p>
-                  <p className="font-medium text-gray-900">
-                    {clientData?.location || 'Not specified'}
-                  </p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Mail className="h-5 w-5 text-primary-500" />
+                  <div>
+                    <p className="text-sm text-gray-600">Email</p>
+                    <p className="font-medium text-gray-900">
+                      {clientData?.email}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-primary-500" />
-                <div>
-                  <p className="text-sm text-gray-600">Phone</p>
-                  <p className="font-medium text-gray-900">
-                    {clientData?.phone ? formatPhoneNumber(clientData.phone) : 'Not specified'}
-                  </p>
+                
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-5 w-5 text-primary-500" />
+                  <div>
+                    <p className="text-sm text-gray-600">Client Since</p>
+                    <p className="font-medium text-gray-900">
+                      {clientData?.clientSince ? formatDate(clientData.clientSince) : 'Not specified'}
+                    </p>
+                    {clientData?.clientSince && (
+                      <p className="text-xs text-gray-500">
+                        {calculateClientDuration(clientData.clientSince)} with DEK Innovations
+                      </p>
+                    )}
+                  </div>
                 </div>
+
+                {clientData?.website && (
+                  <div className="flex items-center gap-3">
+                    <Globe className="h-5 w-5 text-primary-500" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Website</p>
+                      <div className="flex items-center gap-2">
+                        <a 
+                          href={clientData.website.startsWith('http') ? clientData.website : `https://${clientData.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          {clientData.website}
+                        </a>
+                        {clientData.websiteStatus && (
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusDisplay(clientData.websiteStatus).bgColor} ${getStatusDisplay(clientData.websiteStatus).color}`}>
+                            {getStatusDisplay(clientData.websiteStatus).icon} {getStatusDisplay(clientData.websiteStatus).text}
+                          </span>
+                        )}
+                      </div>
+                      {clientData.lastChecked && (
+                        <p className="text-xs text-gray-400 mt-1">
+                          Last checked: {formatDate(clientData.lastChecked)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-primary-500" />
-                <div>
-                  <p className="text-sm text-gray-600">Email</p>
-                  <p className="font-medium text-gray-900">
-                    {clientData?.email}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-primary-500" />
-                <div>
-                  <p className="text-sm text-gray-600">Client Since</p>
-                  <p className="font-medium text-gray-900">
-                    {clientData?.clientSince ? formatDate(clientData.clientSince) : 'Not specified'}
-                  </p>
-                  {clientData?.clientSince && (
-                    <p className="text-xs text-gray-500">
-                      {calculateClientDuration(clientData.clientSince)} with DEK Innovations
-                    </p>
+
+            {/* Representative Contact Information */}
+            {(clientData?.repName || clientData?.repEmail || clientData?.repPhone) && (
+              <div className="pt-6 border-t border-gray-200">
+                <h3 className="text-sm font-medium text-gray-600 mb-4 flex items-center gap-2">
+                  <UserCheck className="h-4 w-4" />
+                  Primary Contact
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {clientData.repName && (
+                    <div className="flex items-center gap-3">
+                      <UserCheck className="h-4 w-4 text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-600">Contact Name</p>
+                        <p className="font-medium text-gray-900">{clientData.repName}</p>
+                        {clientData.repRole && (
+                          <p className="text-xs text-gray-500">{clientData.repRole}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {clientData.repEmail && (
+                    <div className="flex items-center gap-3">
+                      <Mail className="h-4 w-4 text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-600">Contact Email</p>
+                        <a 
+                          href={`mailto:${clientData.repEmail}`}
+                          className="font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          {clientData.repEmail}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  {clientData.repPhone && (
+                    <div className="flex items-center gap-3">
+                      <Phone className="h-4 w-4 text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-600">Contact Phone</p>
+                        <a 
+                          href={`tel:${clientData.repPhone}`}
+                          className="font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          {formatPhoneNumber(clientData.repPhone)}
+                        </a>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
         
@@ -208,6 +314,7 @@ export default function ClientDashboard() {
           </div>
         </div>
       </div>
+
     </div>
   )
 }

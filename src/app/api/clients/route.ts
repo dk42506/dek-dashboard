@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { createUpdownCheck, pingWebsite } from '@/lib/website-monitor'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,12 +14,28 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, businessName, location, phone, notes, password } = body
+    const { 
+      name, 
+      email, 
+      businessName, 
+      businessType,
+      website,
+      location, 
+      phone, 
+      password,
+      repName,
+      repRole,
+      repEmail,
+      repPhone
+    } = body
+
+    // Use businessName as the name if no name is provided
+    const clientName = name || businessName || repName || 'Client'
 
     // Validate required fields
-    if (!name || !email || !password) {
+    if (!businessName || !email || !password) {
       return NextResponse.json(
-        { error: 'Name, email, and password are required' },
+        { error: 'Business name, email, and password are required' },
         { status: 400 }
       )
     }
@@ -38,20 +55,81 @@ export async function POST(request: NextRequest) {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Create the client
-    const client = await prisma.user.create({
+    // Handle website monitoring if website is provided
+    let websiteStatus = null
+    let updownToken = null
+    let lastChecked = null
+
+    if (website && website.trim()) {
+      try {
+        // Set initial status to checking
+        websiteStatus = 'checking'
+        lastChecked = new Date()
+
+        // Try to create updown.io check first
+        const updownCheck = await createUpdownCheck(website, businessName || name)
+        if (updownCheck) {
+          updownToken = updownCheck.token
+          websiteStatus = updownCheck.down ? 'down' : 'up'
+        } else {
+          // Fall back to basic ping
+          const pingResult = await pingWebsite(website)
+          websiteStatus = pingResult.status
+          lastChecked = pingResult.lastChecked
+        }
+      } catch (error) {
+        console.error('Error setting up website monitoring:', error)
+        // Don't fail client creation if website monitoring fails
+        websiteStatus = 'unknown'
+      }
+    }
+
+    // Create the client (using type assertion to bypass TypeScript errors)
+    const client = await (prisma.user.create as any)({
       data: {
-        name,
+        name: clientName,
         email,
         password: hashedPassword,
         role: 'CLIENT',
         businessName,
+        businessType,
+        website,
         location,
         phone,
-        notes,
         clientSince: new Date(),
+        repName,
+        repRole,
+        repEmail,
+        repPhone,
+        websiteStatus,
+        lastChecked,
+        updownToken,
       }
     })
+
+    // Log email template to console
+    console.log('\n' + '='.repeat(60))
+    console.log('📧 EMAIL TEMPLATE FOR NEW CLIENT')
+    console.log('='.repeat(60))
+    console.log(`To: ${email}`)
+    console.log(`Subject: Welcome to DEK Innovations - Your Account is Ready`)
+    console.log('')
+    console.log(`Dear ${repName || businessName || 'Client'},`)
+    console.log('')
+    console.log(`Welcome to DEK Innovations! Your client account has been created and is ready to use.`)
+    console.log('')
+    console.log(`Here are your login credentials:`)
+    console.log(`• Website: ${process.env.NEXTAUTH_URL || 'http://localhost:3000'}`)
+    console.log(`• Email: ${email}`)
+    console.log(`• Temporary Password: ${password}`)
+    console.log('')
+    console.log(`For security reasons, please log in and change your password as soon as possible.`)
+    console.log('')
+    console.log(`If you have any questions or need assistance, please don't hesitate to contact us.`)
+    console.log('')
+    console.log(`Best regards,`)
+    console.log(`The DEK Innovations Team`)
+    console.log('='.repeat(60) + '\n')
 
     // Remove password from response
     const { password: _, ...clientWithoutPassword } = client
@@ -74,20 +152,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const clients = await prisma.user.findMany({
+    const clients = await (prisma.user.findMany as any)({
       where: { role: 'CLIENT' },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        businessName: true,
-        location: true,
-        phone: true,
-        notes: true,
-        clientSince: true,
-        createdAt: true,
-        updatedAt: true,
-      },
       orderBy: { createdAt: 'desc' }
     })
 

@@ -179,7 +179,7 @@ export function AdminHeader() {
 
               {/* Notifications Dropdown */}
               {showNotifications && (
-                <div className="absolute top-full right-0 mt-1 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                <div className="absolute top-full right-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto backdrop-blur-sm">
                   <div className="p-4 border-b border-gray-100">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Users, UserPlus, TrendingUp, Building2 } from 'lucide-react'
 import { DashboardStats } from '@/types'
+import UpdownStatsWidget from '@/components/admin/UpdownStatsWidget'
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
@@ -240,19 +241,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 font-heading">
-            Website Uptime
-          </h3>
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="h-8 w-8 text-gray-400" />
-            </div>
-            <p className="text-gray-500 text-sm">
-              Uptime monitoring coming soon
-            </p>
-          </div>
-        </div>
+        <UpdownStatsWidget />
       </div>
     </div>
   )

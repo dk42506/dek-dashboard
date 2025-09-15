@@ -53,9 +53,25 @@ model User {
   
   // Client-specific fields
   businessName  String?
+  businessType  String?
+  website       String?
   location      String?
   phone         String?
   clientSince   DateTime?
+  
+  // Representative contact information
+  repName       String?
+  repRole       String?
+  repEmail      String?
+  repPhone      String?
+  
+  // Website monitoring
+  websiteStatus String?   // 'up', 'down', 'unknown', 'checking'
+  lastChecked   DateTime?
+  updownToken   String?   // updown.io check token
+  
+  // Password management
+  passwordChanged Boolean? @default(false)
 }
 
 model Note {

@@ -13,10 +13,22 @@ export interface ClientUser {
   createdAt: Date
   updatedAt: Date
   businessName: string | null
+  businessType: string | null
+  website: string | null
   location: string | null
   phone: string | null
-  notes: string | null
   clientSince: Date | null
+  
+  // Representative contact information
+  repName: string | null
+  repRole: string | null
+  repEmail: string | null
+  repPhone: string | null
+  
+  // Website monitoring
+  websiteStatus: string | null
+  lastChecked: Date | null
+  updownToken: string | null
 }
 
 export interface DashboardStats {
@@ -36,10 +48,17 @@ export interface ClientFormData {
   name: string
   email: string
   businessName?: string
+  businessType?: string
+  website?: string
   location?: string
   phone?: string
-  notes?: string
   password?: string
+  
+  // Representative contact information
+  repName?: string
+  repRole?: string
+  repEmail?: string
+  repPhone?: string
 }
 
 export interface Note {

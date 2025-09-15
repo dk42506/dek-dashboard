@@ -1,15 +1,34 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { ArrowLeft, Save, User, Building2, MapPin, Phone, Mail, FileText, Globe, UserCheck } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ArrowLeft, Save, Building2, UserCheck, Globe, MapPin, Phone, Mail } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { ClientFormData } from '@/types'
+import { useParams, useRouter } from 'next/navigation'
+import { ClientUser } from '@/types'
 
-export default function NewClientPage() {
+interface EditFormData {
+  name: string
+  email: string
+  businessName: string
+  businessType: string
+  website: string
+  location: string
+  phone: string
+  repName: string
+  repRole: string
+  repEmail: string
+  repPhone: string
+}
+
+export default function EditClientPage() {
+  const params = useParams()
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState<ClientFormData>({
+  const clientId = params.id as string
+  
+  const [client, setClient] = useState<ClientUser | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [formData, setFormData] = useState<EditFormData>({
     name: '',
     email: '',
     businessName: '',
@@ -17,36 +36,63 @@ export default function NewClientPage() {
     website: '',
     location: '',
     phone: '',
-    password: '',
     repName: '',
     repRole: '',
     repEmail: '',
     repPhone: '',
   })
 
-  // Generate a simple temporary password
-  const generateTempPassword = () => {
-    const adjectives = ['Quick', 'Smart', 'Fast', 'Easy', 'Cool', 'Nice', 'Good', 'Best']
-    const numbers = Math.floor(Math.random() * 99) + 1
-    const adjective = adjectives[Math.floor(Math.random() * adjectives.length)]
-    return `${adjective}${numbers}`
-  }
-
-  // Auto-generate password when component mounts
   useEffect(() => {
+    const loadClient = async () => {
+      setIsLoading(true)
+      try {
+        const response = await fetch(`/api/clients/${clientId}`)
+        if (response.ok) {
+          const clientData = await response.json()
+          setClient(clientData)
+          
+          // Populate form with existing data
+          setFormData({
+            name: clientData.name || '',
+            email: clientData.email || '',
+            businessName: clientData.businessName || '',
+            businessType: clientData.businessType || '',
+            website: clientData.website || '',
+            location: clientData.location || '',
+            phone: clientData.phone || '',
+            repName: clientData.repName || '',
+            repRole: clientData.repRole || '',
+            repEmail: clientData.repEmail || '',
+            repPhone: clientData.repPhone || '',
+          })
+        } else {
+          console.error('Failed to fetch client')
+        }
+      } catch (error) {
+        console.error('Error loading client:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadClient()
+  }, [clientId])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      password: generateTempPassword()
+      [name]: value
     }))
-  }, [])
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    setIsSaving(true)
 
     try {
-      const response = await fetch('/api/clients', {
-        method: 'POST',
+      const response = await fetch(`/api/clients/${clientId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -55,28 +101,47 @@ export default function NewClientPage() {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to create client')
+        throw new Error(error.error || 'Failed to update client')
       }
 
-      const client = await response.json()
-      console.log('Client created successfully:', client)
-      
-      // Redirect to clients list
-      router.push('/admin/clients')
+      // Redirect back to client profile
+      router.push(`/admin/clients/${clientId}`)
     } catch (error) {
-      console.error('Error creating client:', error)
-      alert(error instanceof Error ? error.message : 'Failed to create client')
+      console.error('Error updating client:', error)
+      alert(error instanceof Error ? error.message : 'Failed to update client')
     } finally {
-      setIsLoading(false)
+      setIsSaving(false)
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-8 h-8 bg-gray-200 rounded"></div>
+            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          </div>
+          <div className="bg-gray-200 h-96 rounded-xl"></div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!client) {
+    return (
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Client Not Found</h1>
+        <p className="text-gray-600 mb-6">The client you're trying to edit doesn't exist.</p>
+        <Link
+          href="/admin/clients"
+          className="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Clients
+        </Link>
+      </div>
+    )
   }
 
   return (
@@ -84,23 +149,24 @@ export default function NewClientPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href="/admin/clients"
+          href={`/admin/clients/${clientId}`}
           className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-gray-900 font-heading">
-            Add New Client
+            Edit Client: {client.name || client.businessName}
           </h1>
           <p className="text-gray-600">
-            Create a new client profile with login credentials
+            Update client information and business details
           </p>
         </div>
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Business Information */}
         <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900 mb-6 font-heading flex items-center gap-2">
             <Building2 className="h-5 w-5 text-secondary-500" />
@@ -109,18 +175,18 @@ export default function NewClientPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-2">
-                Business Name *
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                Contact Name *
               </label>
               <input
                 type="text"
-                id="businessName"
-                name="businessName"
+                id="name"
+                name="name"
                 required
-                value={formData.businessName}
+                value={formData.name}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Enter business name"
+                placeholder="Enter contact name"
               />
             </div>
 
@@ -141,6 +207,21 @@ export default function NewClientPage() {
                   placeholder="client@example.com"
                 />
               </div>
+            </div>
+
+            <div>
+              <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-2">
+                Business Name
+              </label>
+              <input
+                type="text"
+                id="businessName"
+                name="businessName"
+                value={formData.businessName}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Enter business name"
+              />
             </div>
 
             <div>
@@ -175,7 +256,7 @@ export default function NewClientPage() {
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                We'll automatically monitor this website's uptime
+                Website monitoring will be updated automatically
               </p>
             </div>
 
@@ -214,28 +295,10 @@ export default function NewClientPage() {
                 />
               </div>
             </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Temporary Password *
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Enter temporary password"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Client can change this password after first login
-              </p>
-            </div>
           </div>
         </div>
 
+        {/* Representative Contact */}
         <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900 mb-6 font-heading flex items-center gap-2">
             <UserCheck className="h-5 w-5 text-purple-500" />
@@ -314,7 +377,7 @@ export default function NewClientPage() {
         {/* Actions */}
         <div className="flex items-center justify-between">
           <Link
-            href="/admin/clients"
+            href={`/admin/clients/${clientId}`}
             className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
           >
             Cancel
@@ -322,36 +385,23 @@ export default function NewClientPage() {
           
           <button
             type="submit"
-            disabled={isLoading || !formData.businessName || !formData.email || !formData.password}
+            disabled={isSaving || !formData.name || !formData.email}
             className="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg transition-colors"
           >
-            {isLoading ? (
+            {isSaving ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Creating...
+                Saving...
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                Create Client
+                Save Changes
               </>
             )}
           </button>
         </div>
       </form>
-
-      {/* Help Text */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-        <h3 className="text-sm font-medium text-blue-900 mb-2">
-          What happens next?
-        </h3>
-        <ul className="text-sm text-blue-800 space-y-1">
-          <li>• The client will receive login credentials via email</li>
-          <li>• They can log in and update their profile information</li>
-          <li>• You can manage their account from the clients dashboard</li>
-          <li>• All client data is securely stored and encrypted</li>
-        </ul>
-      </div>
     </div>
   )
 }
