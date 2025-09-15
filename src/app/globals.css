@@ -1,0 +1,375 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+/* Dark mode styles */
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+  }
+  
+  .dark {
+    /* Main dark background - matching the main site's dark theme */
+    background-color: #1a1a1a; /* Very dark gray, almost black */
+  }
+  
+  .dark body {
+    background: #1a1a1a; /* Very dark gray, almost black */
+    color: #e5e5e5; /* Light gray text */
+  }
+}
+
+/* Custom dark mode component styles */
+@layer components {
+  /* Dark mode overrides - comprehensive coverage */
+  .dark .bg-white {
+    background-color: #2d2d2d !important; /* Dark gray instead of white */
+    border-color: #404040 !important; /* Darker border */
+  }
+  
+  /* Text color overrides */
+  .dark .text-gray-900 {
+    color: #e5e5e5 !important; /* Light gray text */
+  }
+  
+  .dark .text-gray-800 {
+    color: #d1d1d1 !important;
+  }
+  
+  .dark .text-gray-700 {
+    color: #b8b8b8 !important;
+  }
+  
+  .dark .text-gray-600 {
+    color: #9a9a9a !important;
+  }
+  
+  .dark .text-gray-500 {
+    color: #7a7a7a !important;
+  }
+  
+  .dark .text-gray-400 {
+    color: #6a6a6a !important;
+  }
+  
+  /* Border color overrides */
+  .dark .border-gray-100 {
+    border-color: #404040 !important;
+  }
+  
+  .dark .border-gray-200 {
+    border-color: #505050 !important;
+  }
+  
+  .dark .border-gray-300 {
+    border-color: #606060 !important;
+  }
+  
+  /* Background color overrides */
+  .dark .bg-gray-50 {
+    background-color: #3a3a3a !important;
+  }
+  
+  .dark .bg-gray-100 {
+    background-color: #404040 !important;
+  }
+  
+  .dark .bg-gray-200 {
+    background-color: #4a4a4a !important;
+  }
+  
+  /* Fix bright white elements in dark mode */
+  .dark .bg-green-50 {
+    background-color: #2a3a2a !important;
+  }
+  
+  .dark .bg-blue-50 {
+    background-color: #2a2a3a !important;
+  }
+  
+  .dark .bg-purple-50 {
+    background-color: #3a2a3a !important;
+  }
+  
+  .dark .bg-orange-50 {
+    background-color: #3a3a2a !important;
+  }
+  
+  .dark .bg-red-50 {
+    background-color: #3a2a2a !important;
+  }
+  
+  .dark .bg-yellow-50 {
+    background-color: #3a3a2a !important;
+  }
+  
+  /* Fix navigation selected state and other bright elements */
+  .dark .bg-primary-50 {
+    background-color: #4a3a4a !important;
+  }
+  
+  .dark .hover\:bg-primary-50:hover {
+    background-color: #4a3a4a !important;
+  }
+  
+  /* Fix any remaining bright backgrounds */
+  .dark [class*="bg-"][class*="-50"] {
+    background-color: #3a3a3a !important;
+  }
+  
+  /* Hover states */
+  .dark .hover\:bg-gray-50:hover {
+    background-color: #3a3a3a !important;
+  }
+  
+  .dark .hover\:bg-gray-100:hover {
+    background-color: #404040 !important;
+  }
+  
+  /* Primary color adjustments for dark mode */
+  .dark .bg-primary-100 {
+    background-color: #4a3a4a !important; /* Darker primary background */
+  }
+  
+  .dark .text-primary-600 {
+    color: #b8a3b8 !important; /* Lighter primary text */
+  }
+  
+  .dark .hover\:bg-primary-50:hover {
+    background-color: #4a3a4a !important;
+  }
+  
+  /* Secondary color adjustments */
+  .dark .hover\:bg-secondary-50:hover {
+    background-color: #5a3a4a !important;
+  }
+  
+  .dark .hover\:bg-red-50:hover {
+    background-color: #5a3a3a !important;
+  }
+  
+  /* Form elements */
+  .dark input,
+  .dark select,
+  .dark textarea {
+    background-color: #3a3a3a !important;
+    border-color: #606060 !important;
+    color: #e5e5e5 !important;
+  }
+  
+  .dark input:focus,
+  .dark select:focus,
+  .dark textarea:focus {
+    border-color: #8B7D8B !important;
+    box-shadow: 0 0 0 2px rgba(139, 125, 139, 0.2) !important;
+  }
+  
+  .dark input::placeholder,
+  .dark select::placeholder,
+  .dark textarea::placeholder {
+    color: #7a7a7a !important;
+  }
+  
+  /* Shadows in dark mode */
+  .dark .shadow-soft {
+    box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.5), 0 10px 20px -2px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  .dark .shadow-medium {
+    box-shadow: 0 4px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  /* DEK Components */
+  .dek-gradient {
+    @apply bg-gradient-to-br from-primary-500 to-secondary-500;
+  }
+  
+  .dek-gradient-text {
+    @apply bg-gradient-to-br from-primary-500 to-secondary-500 bg-clip-text text-transparent;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-medium hover:-translate-y-1;
+  }
+  
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-white border-2 border-primary-500 text-primary-500 px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
+  }
+  
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200;
+  }
+  
+  .sidebar-link.active {
+    @apply text-primary-600 bg-primary-50 border-r-2 border-primary-500;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #8B7D8B;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6B5B6B;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #6B7280;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+/* Loading animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Pulse animation for loading states */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Force signin page to always be light mode */
+.light .bg-white,
+.light input,
+.light select,
+.light textarea,
+.light .text-gray-900,
+.light .text-gray-800,
+.light .text-gray-700,
+.light .text-gray-600,
+.light .text-gray-500,
+.light .text-gray-400,
+.light .border-gray-100,
+.light .border-gray-200,
+.light .border-gray-300 {
+  /* Reset any dark mode overrides for light class */
+  background-color: initial !important;
+  color: initial !important;
+  border-color: initial !important;
+}
+
+/* Ensure signin page elements stay light */
+.light .bg-gradient-to-br {
+  background: linear-gradient(to bottom right, var(--tw-gradient-stops)) !important;
+}
+
+.light input {
+  background-color: white !important;
+  color: #111827 !important;
+  border-color: #d1d5db !important;
+}
+
+.light input:focus {
+  border-color: #8B7D8B !important;
+  box-shadow: 0 0 0 2px rgba(139, 125, 139, 0.2) !important;
+}
+
+/* Fix button visibility in dark mode */
+.dark button {
+  color: inherit !important;
+}
+
+.dark .bg-primary-500 {
+  background-color: #8B7D8B !important;
+}
+
+.dark .hover\:bg-primary-600:hover {
+  background-color: #7A6C7A !important;
+}
+
+.dark .disabled\:bg-gray-300:disabled {
+  background-color: #4a4a4a !important;
+  color: #7a7a7a !important;
+}
+
+/* Fix text visibility in dark mode */
+.dark .text-blue-900 {
+  color: #93c5fd !important;
+}
+
+.dark .text-blue-800 {
+  color: #bfdbfe !important;
+}
+
+.dark .border-blue-200 {
+  border-color: #1e40af !important;
+}
+
+/* Fix cancel link visibility */
+.dark .text-gray-600 {
+  color: #9ca3af !important;
+}
+
+.dark .hover\:text-gray-800:hover {
+  color: #d1d5db !important;
+}
