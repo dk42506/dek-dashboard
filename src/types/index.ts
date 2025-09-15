@@ -42,6 +42,14 @@ export interface ClientFormData {
   password?: string
 }
 
+export interface Note {
+  id: string
+  content: string
+  createdAt: Date
+  updatedAt: Date
+  userId: string
+}
+
 export interface PlaceholderSection {
   title: string
   description: string

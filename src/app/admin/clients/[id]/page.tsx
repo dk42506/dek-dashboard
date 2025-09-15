@@ -5,6 +5,7 @@ import { ArrowLeft, Edit, Mail, Phone, MapPin, Calendar, FileText, DollarSign, T
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ClientUser } from '@/types'
+import NotesSection from '@/components/admin/NotesSection'
 
 export default function ClientProfilePage() {
   const params = useParams()
@@ -186,30 +187,8 @@ export default function ClientProfilePage() {
             </div>
           </div>
 
-          {/* Notes */}
-          <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 font-heading flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary-500" />
-              Notes
-            </h3>
-            
-            {client.notes ? (
-              <div className="prose prose-sm max-w-none">
-                <p className="text-gray-700 leading-relaxed">{client.notes}</p>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No notes added yet</p>
-                <Link
-                  href={`/admin/clients/${client.id}/edit`}
-                  className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-                >
-                  Add notes
-                </Link>
-              </div>
-            )}
-          </div>
+          {/* Meeting Notes */}
+          <NotesSection clientId={client.id} />
 
           {/* Placeholder Sections */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
