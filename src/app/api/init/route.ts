@@ -4,6 +4,9 @@ import { seedDatabase } from '@/lib/seed'
 
 export async function GET(request: NextRequest) {
   try {
+    // First, ensure database tables exist by running migrations
+    await prisma.$executeRaw`SELECT 1`
+    
     // Check if database is already initialized
     const adminExists = await prisma.user.findFirst({
       where: { role: 'ADMIN' }
@@ -26,6 +29,19 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Database initialization error:', error)
+    
+    // If it's a database connection error, provide specific guidance
+    if (error instanceof Error && error.message.includes('Unable to open the database file')) {
+      return NextResponse.json(
+        { 
+          error: 'Database configuration issue',
+          details: 'SQLite not supported on Vercel. Please use PostgreSQL.',
+          solution: 'Add a PostgreSQL database URL to your environment variables'
+        },
+        { status: 500 }
+      )
+    }
+    
     return NextResponse.json(
       { 
         error: 'Failed to initialize database',
