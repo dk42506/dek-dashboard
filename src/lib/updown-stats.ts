@@ -1,5 +1,7 @@
 // Updown.io account statistics and usage tracking
 
+import { prisma } from './prisma'
+
 export interface UpdownStats {
   totalChecks: number
   activeChecks: number
@@ -142,4 +144,22 @@ export function estimateMonthlyCost(stats: UpdownStats): {
       description: '500+ checks, unlimited requests'
     }
   }
+}
+
+/**
+ * Get Updown statistics from the database
+ */
+export async function getUpdownStats() {
+  const total = await prisma.user.count({
+    where: { website: { not: null } }
+  })
+
+  const up = await prisma.user.count({ where: { websiteStatus: 'up' } })
+  const down = await prisma.user.count({ where: { websiteStatus: 'down' } })
+  const unknown = await prisma.user.count({ where: { websiteStatus: { in: [null, 'unknown'] } } })
+  const checking = await prisma.user.count({ where: { websiteStatus: 'checking' } })
+
+  const percentage = total > 0 ? Math.round((up / total) * 100) : 0
+
+  return { total, up, down, unknown, checking, percentage }
 }

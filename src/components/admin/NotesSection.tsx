@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Plus, Edit2, Trash2, Save, X, MessageSquare } from 'lucide-react'
 import { Note } from '@/types'
 
@@ -15,38 +15,38 @@ export default function NotesSection({ clientId }: NotesSectionProps) {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
   const [newNoteContent, setNewNoteContent] = useState('')
   const [editNoteContent, setEditNoteContent] = useState('')
+  const [saving, setSaving] = useState(false)
 
   // Load notes when component mounts
   useEffect(() => {
-    loadNotes()
-  }, [clientId])
-
-  const loadNotes = async () => {
-    setIsLoading(true)
-    try {
-      const response = await fetch(`/api/clients/${clientId}/notes`)
-      if (response.ok) {
-        const notesData = await response.json()
-        // Convert date strings back to Date objects
-        const processedNotes = notesData.map((note: any) => ({
-          ...note,
-          createdAt: new Date(note.createdAt),
-          updatedAt: new Date(note.updatedAt)
-        }))
-        setNotes(processedNotes)
-      } else {
-        console.error('Failed to fetch notes')
+    let mounted = true
+    const load = async () => {
+      setIsLoading(true)
+      try {
+        const res = await fetch(`/api/clients/${clientId}/notes`)
+        if (res.ok) {
+          const data = await res.json()
+          // Convert date strings back to Date objects
+          const processedNotes = data.map((note: any) => ({
+            ...note,
+            createdAt: new Date(note.createdAt),
+            updatedAt: new Date(note.updatedAt)
+          }))
+          if (mounted) setNotes(processedNotes)
+        }
+      } catch (e) {
+        console.error('Error loading notes', e)
+      } finally {
+        if (mounted) setIsLoading(false)
       }
-    } catch (error) {
-      console.error('Error loading notes:', error)
-    } finally {
-      setIsLoading(false)
     }
-  }
+    load()
+    return () => { mounted = false }
+  }, [clientId])
 
   const handleAddNote = async () => {
     if (!newNoteContent.trim()) return
-
+    setSaving(true)
     try {
       const response = await fetch(`/api/clients/${clientId}/notes`, {
         method: 'POST',
@@ -71,6 +71,8 @@ export default function NotesSection({ clientId }: NotesSectionProps) {
       }
     } catch (error) {
       console.error('Error creating note:', error)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -216,8 +218,7 @@ export default function NotesSection({ clientId }: NotesSectionProps) {
               disabled={!newNoteContent.trim()}
               className="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg text-sm transition-colors"
             >
-              <Save className="h-4 w-4" />
-              Save Note
+              {saving ? 'Saving...' : 'Save Note'}
             </button>
             <button
               onClick={cancelAdding}

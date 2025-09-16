@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { fetchUpdownChecks, calculateUpdownStats, estimateMonthlyCost } from '@/lib/updown-stats'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,6 +53,29 @@ export async function GET(request: NextRequest) {
         details: error instanceof Error ? error.message : 'Unknown error'
       }, { status: 500 })
     }
+
+    const total = await prisma.user.count({
+      where: { website: { not: null } }
+    })
+
+    const up = await prisma.user.count({
+      where: { websiteStatus: 'up' }
+    })
+    const down = await prisma.user.count({
+      where: { websiteStatus: 'down' }
+    })
+    const unknown = await prisma.user.count({
+      where: { websiteStatus: { in: [null, 'unknown'] } }
+    })
+    const checking = await prisma.user.count({
+      where: { websiteStatus: 'checking' }
+    })
+
+    const percentage = total > 0 ? Math.round((up / total) * 100) : 0
+
+    return NextResponse.json({
+      total, up, down, unknown, checking, percentage
+    })
   } catch (error) {
     console.error('Error in updown stats API:', error)
     return NextResponse.json(

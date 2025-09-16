@@ -1,80 +1,80 @@
 'use client'
-
 import { useEffect, useState } from 'react'
-import { Globe, Activity, DollarSign, Clock, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react'
-import { getPeriodDescription } from '@/lib/updown-stats'
 
-interface UpdownStats {
-  totalChecks: number
-  activeChecks: number
-  disabledChecks: number
-  checksDown: number
-  totalMonthlyRequests: number
-  checksByPeriod: Record<number, number>
-  averageUptime: number
-  lastUpdated: string
-  costEstimate: {
-    estimatedCost: number
-    tier: string
-    description: string
-  }
-  configured: boolean
-  checks?: Array<{
-    token: string
-    url: string
-    alias: string | null
-    enabled: boolean
-    down: boolean
-    uptime: number
-    period: number
-    last_check_at: string | null
-  }>
+type UpdownStats = {
+  total: number
+  up: number
+  down: number
+  unknown: number
+  checking: number
+  percentage: number
 }
 
 export default function UpdownStatsWidget() {
   const [stats, setStats] = useState<UpdownStats | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchStats = async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      
-      const response = await fetch('/api/updown-stats')
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch updown.io stats')
-      }
-      
-      setStats(data)
-    } catch (err) {
-      console.error('Error fetching updown stats:', err)
-      setError(err instanceof Error ? err.message : 'Unknown error')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchStats()
+    let mounted = true
+    const load = async () => {
+      setLoading(true)
+      try {
+        const res = await fetch('/api/updown-stats')
+        if (!res.ok) throw new Error('Failed to load')
+        const data = await res.json()
+        if (mounted) setStats(data)
+      } catch (e) {
+        console.error('Updown stats error', e)
+        if (mounted) setStats(null)
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+    load()
+    return () => { mounted = false }
   }, [])
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 font-heading flex items-center gap-2">
-          <Globe className="h-5 w-5 text-purple-500" />
-          Updown.io Stats
-        </h3>
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+        <div className="h-28 flex items-center justify-center">
+          <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
     )
+  }
+
+  if (!stats) {
+    return (
+      <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100 text-center">
+        <p className="text-sm text-gray-600">Unable to load uptime stats.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Website Uptime Overview</h3>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="text-sm text-gray-500">Monitored</div>
+        <div className="font-medium text-gray-900">{stats.total}</div>
+
+        <div className="text-sm text-green-600">Online</div>
+        <div className="font-medium text-gray-900">{stats.up}</div>
+
+        <div className="text-sm text-red-600">Offline</div>
+        <div className="font-medium text-gray-900">{stats.down}</div>
+
+        <div className="text-sm text-yellow-600">Unknown</div>
+        <div className="font-medium text-gray-900">{stats.unknown}</div>
+      </div>
+
+      <div className="mt-4 text-xs text-gray-500">
+        Uptime percentage (estimated): <span className="font-medium text-gray-900">{stats.percentage}%</span>
+      </div>
+    </div>
+  )
+}
   }
 
   if (error || !stats?.configured) {
