@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Save, User, Bell, Shield, Database, Palette, Building2, Globe, Clock, DollarSign } from 'lucide-react'
+import { Save, User, Bell, Shield, Database, Palette, Building2, Clock, DollarSign } from 'lucide-react'
 import { useTheme } from '@/contexts/theme-context'
 import { AdminSettings, AdminSettingsFormData } from '@/types'
 
@@ -400,158 +400,6 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* FreshBooks Integration */}
-          <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6 font-heading flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-green-600" />
-              FreshBooks Integration
-            </h2>
-            
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Client ID
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.freshbooksClientId}
-                    onChange={(e) => handleChange('freshbooksClientId', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Your FreshBooks Client ID"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Client Secret
-                  </label>
-                  <input
-                    type="password"
-                    value={settings.freshbooksClientSecret}
-                    onChange={(e) => handleChange('freshbooksClientSecret', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Your FreshBooks Client Secret"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Access Token
-                  </label>
-                  <input
-                    type="password"
-                    value={settings.freshbooksAccessToken}
-                    onChange={(e) => handleChange('freshbooksAccessToken', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Your FreshBooks Access Token"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Account ID
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.freshbooksAccountId}
-                    onChange={(e) => handleChange('freshbooksAccountId', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Your FreshBooks Account ID"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900">Auto Sync</h3>
-                  <p className="text-sm text-gray-500">Automatically sync financial data from FreshBooks</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.freshbooksAutoSync}
-                    onChange={(e) => handleChange('freshbooksAutoSync', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-                </label>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sync Frequency
-                </label>
-                <select
-                  value={settings.freshbooksSyncFrequency}
-                  onChange={(e) => handleChange('freshbooksSyncFrequency', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  disabled={!settings.freshbooksAutoSync}
-                >
-                  <option value="hourly">Every hour</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* API Management */}
-          <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6 font-heading flex items-center gap-2">
-              <Globe className="h-5 w-5 text-blue-600" />
-              API Management
-            </h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Updown.io API Key
-                </label>
-                <input
-                  type="password"
-                  value={settings.updownApiKey}
-                  onChange={(e) => handleChange('updownApiKey', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="Your Updown.io API Key"
-                />
-                <p className="text-xs text-gray-500 mt-1">Used for website monitoring and uptime checks</p>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900">Auto Sync Updown</h3>
-                  <p className="text-sm text-gray-500">Automatically sync website monitoring data</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.updownAutoSync}
-                    onChange={(e) => handleChange('updownAutoSync', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-                </label>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Updown Sync Frequency
-                </label>
-                <select
-                  value={settings.updownSyncFrequency}
-                  onChange={(e) => handleChange('updownSyncFrequency', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  disabled={!settings.updownAutoSync}
-                >
-                  <option value="hourly">Every hour</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
           {/* System Settings */}
           <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
             <h2 className="text-lg font-semibold text-gray-900 mb-6 font-heading flex items-center gap-2">
@@ -703,25 +551,28 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Quick Actions */}
+          {/* Integration Status */}
           <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 font-heading">
-              Quick Actions
+              Integration Status
             </h2>
             
             <div className="space-y-3">
-              <button className="w-full text-left p-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2">
-                <Database className="h-4 w-4" />
-                Export Client Data
-              </button>
-              <button className="w-full text-left p-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                Test Website Monitoring
-              </button>
-              <button className="w-full text-left p-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2">
-                <Shield className="h-4 w-4" />
-                Security Audit
-              </button>
+              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm font-medium text-green-800">Updown.io</span>
+                </div>
+                <span className="text-xs text-green-600">Connected</span>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm font-medium text-green-800">FreshBooks</span>
+                </div>
+                <span className="text-xs text-green-600">Connected</span>
+              </div>
             </div>
           </div>
 

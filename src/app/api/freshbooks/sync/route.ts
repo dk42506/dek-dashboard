@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { freshBooksService } from '@/lib/freshbooks'
+import { freshbooks } from '@/lib/freshbooks'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
@@ -16,51 +16,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Initialize FreshBooks service
-    await freshBooksService.initialize(session.user.id)
-
-    // Get all clients from database
-    const dbClients = await prisma.user.findMany({
-      where: { role: 'CLIENT' },
-      select: {
-        id: true,
-        businessName: true,
-        name: true,
-        email: true,
-      }
-    })
-
-    // Get all clients from FreshBooks
-    const fbClients = await freshBooksService.getClients()
-
-    const matches = []
-    const unmatched = []
-
-    // Try to match clients
-    for (const dbClient of dbClients) {
-      if (!dbClient.businessName) continue
-
-      const fbClient = await freshBooksService.findClientByBusinessName(dbClient.businessName)
-      
-      if (fbClient) {
-        matches.push({
-          dbClient,
-          fbClient,
-          matchType: 'business_name'
-        })
-      } else {
-        unmatched.push(dbClient)
-      }
+    // Check if FreshBooks is configured
+    if (!freshbooks.isConfigured()) {
+      return NextResponse.json({
+        error: 'FreshBooks API not configured',
+        details: 'FreshBooks environment variables not set'
+      }, { status: 500 })
     }
 
+    // For now, return a simple response indicating FreshBooks sync is available
+    // Full implementation would require OAuth flow completion
     return NextResponse.json({
       success: true,
-      matches: matches.length,
-      unmatched: unmatched.length,
-      matchedClients: matches,
-      unmatchedClients: unmatched,
-      totalFreshBooksClients: fbClients.length,
-      totalDatabaseClients: dbClients.length
+      message: 'FreshBooks sync is configured and ready',
+      configured: true,
+      authUrl: freshbooks.getAuthorizationUrl()
     })
 
   } catch (error) {

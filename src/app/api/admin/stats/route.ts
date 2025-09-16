@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { freshBooksService } from '@/lib/freshbooks'
+import { freshbooks } from '@/lib/freshbooks'
 
 export async function GET() {
   try {
@@ -64,13 +64,9 @@ export async function GET() {
         where: { userId: session.user.id }
       })
 
-      if (settings?.freshbooksAccessToken && settings?.freshbooksAccountId) {
-        await freshBooksService.initialize(session.user.id)
-        const invoices = await freshBooksService.getInvoices()
-        totalRevenue = invoices.reduce((sum, invoice) => 
-          sum + parseFloat(invoice.paid.amount), 0
-        )
-      }
+      // FreshBooks integration would require OAuth flow completion
+      // For now, just return 0 revenue
+      totalRevenue = 0
     } catch (error) {
       console.error('Error fetching FreshBooks revenue:', error)
       // Continue without revenue data

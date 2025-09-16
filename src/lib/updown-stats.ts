@@ -1,172 +1,229 @@
-// Updown.io account statistics and usage tracking
-
-import { prisma } from './prisma'
-
-export interface UpdownStats {
-  totalChecks: number
-  activeChecks: number
-  disabledChecks: number
-  checksDown: number
-  totalMonthlyRequests: number
-  checksByPeriod: Record<number, number>
-  averageUptime: number
-  lastUpdated: Date
-}
-
-export interface UpdownCheck {
+interface UpdownCheck {
   token: string
   url: string
-  alias: string | null
-  enabled: boolean
-  down: boolean
+  alias: string
+  last_status: number
   uptime: number
+  down: boolean
+  down_since: string | null
+  up_since: string | null
+  error: string | null
   period: number
-  last_check_at: string | null
+  apdex_t: number
+  string_match: string | null
+  enabled: boolean
+  published: boolean
+  disabled_locations: string[]
+  recipients: string[]
+  last_check_at: string
+  next_check_at: string
   created_at: string
+  mute_until: string | null
+  favicon_url: string
+  custom_headers: Record<string, string>
+  http_verb: string
+  http_body: string
+  ssl: {
+    tested_at: string
+    expires_at: string
+    valid: boolean
+    error: string | null
+  }
 }
 
-/**
- * Fetch all updown.io checks for the account
- */
-export async function fetchUpdownChecks(): Promise<UpdownCheck[]> {
-  const apiKey = process.env.UPDOWN_API_KEY
-  if (!apiKey) {
-    throw new Error('UPDOWN_API_KEY not configured')
+interface UpdownMetrics {
+  requests: number
+  samples: number
+  apdex: number
+  timings: {
+    redirect: number
+    namelookup: number
+    connect: number
+    pretransfer: number
+    starttransfer: number
+    total: number
+  }
+}
+
+export class UpdownStatsService {
+  private apiKey: string
+  private baseUrl = 'https://updown.io/api'
+
+  constructor() {
+    this.apiKey = process.env.UPDOWN_API_KEY || ''
+    if (!this.apiKey) {
+      console.warn('UPDOWN_API_KEY environment variable not set')
+    }
   }
 
-  try {
-    const response = await fetch('https://updown.io/api/checks', {
+  private async makeRequest(endpoint: string): Promise<any> {
+    if (!this.apiKey) {
+      throw new Error('Updown.io API key not configured')
+    }
+
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
       headers: {
-        'X-API-KEY': apiKey,
-      },
+        'X-API-KEY': this.apiKey,
+        'Content-Type': 'application/json'
+      }
     })
 
     if (!response.ok) {
-      throw new Error(`Updown.io API error: ${response.statusText}`)
+      throw new Error(`Updown.io API error: ${response.status} ${response.statusText}`)
     }
 
-    return await response.json()
-  } catch (error) {
-    console.error('Error fetching updown checks:', error)
-    throw error
+    return response.json()
   }
-}
 
-/**
- * Calculate usage statistics from updown.io checks
- */
-export function calculateUpdownStats(checks: UpdownCheck[]): UpdownStats {
-  const totalChecks = checks.length
-  const activeChecks = checks.filter(check => check.enabled).length
-  const disabledChecks = totalChecks - activeChecks
-  const checksDown = checks.filter(check => check.down && check.enabled).length
+  async getAllChecks(): Promise<UpdownCheck[]> {
+    try {
+      return await this.makeRequest('/checks')
+    } catch (error) {
+      console.error('Error fetching Updown.io checks:', error)
+      return []
+    }
+  }
 
-  // Calculate monthly requests based on check periods
-  // Formula: (60 * 60 * 24 * 30) / period_in_seconds = requests per month per check
-  const monthlySecondsTotal = 60 * 60 * 24 * 30 // 30 days in seconds
-  let totalMonthlyRequests = 0
-  const checksByPeriod: Record<number, number> = {}
+  async getCheck(token: string): Promise<UpdownCheck | null> {
+    try {
+      return await this.makeRequest(`/checks/${token}`)
+    } catch (error) {
+      console.error(`Error fetching Updown.io check ${token}:`, error)
+      return null
+    }
+  }
 
-  checks.forEach(check => {
-    if (check.enabled) {
-      const requestsPerMonth = Math.floor(monthlySecondsTotal / check.period)
-      totalMonthlyRequests += requestsPerMonth
+  async getCheckMetrics(token: string, from?: string, to?: string): Promise<UpdownMetrics | null> {
+    try {
+      let endpoint = `/checks/${token}/metrics`
+      const params = new URLSearchParams()
       
-      checksByPeriod[check.period] = (checksByPeriod[check.period] || 0) + 1
+      if (from) params.append('from', from)
+      if (to) params.append('to', to)
+      
+      if (params.toString()) {
+        endpoint += `?${params.toString()}`
+      }
+
+      return await this.makeRequest(endpoint)
+    } catch (error) {
+      console.error(`Error fetching metrics for check ${token}:`, error)
+      return null
     }
-  })
+  }
 
-  // Calculate average uptime (only for enabled checks)
-  const enabledChecks = checks.filter(check => check.enabled)
-  const averageUptime = enabledChecks.length > 0 
-    ? enabledChecks.reduce((sum, check) => sum + check.uptime, 0) / enabledChecks.length
-    : 0
+  async getDowntime(token: string, page = 1): Promise<any[]> {
+    try {
+      return await this.makeRequest(`/checks/${token}/downtimes?page=${page}`)
+    } catch (error) {
+      console.error(`Error fetching downtime for check ${token}:`, error)
+      return []
+    }
+  }
 
-  return {
-    totalChecks,
-    activeChecks,
-    disabledChecks,
-    checksDown,
-    totalMonthlyRequests,
-    checksByPeriod,
-    averageUptime,
-    lastUpdated: new Date(),
+  async createCheck(url: string, options: {
+    alias?: string
+    period?: number
+    apdex_t?: number
+    enabled?: boolean
+    published?: boolean
+    recipients?: string[]
+    string_match?: string
+    custom_headers?: Record<string, string>
+    http_verb?: string
+    http_body?: string
+  } = {}): Promise<UpdownCheck | null> {
+    try {
+      const response = await fetch(`${this.baseUrl}/checks`, {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': this.apiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          url,
+          ...options
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to create check: ${response.status} ${response.statusText}`)
+      }
+
+      return response.json()
+    } catch (error) {
+      console.error('Error creating Updown.io check:', error)
+      return null
+    }
+  }
+
+  async updateCheck(token: string, options: {
+    url?: string
+    alias?: string
+    period?: number
+    apdex_t?: number
+    enabled?: boolean
+    published?: boolean
+    recipients?: string[]
+    string_match?: string
+    custom_headers?: Record<string, string>
+    http_verb?: string
+    http_body?: string
+  }): Promise<UpdownCheck | null> {
+    try {
+      const response = await fetch(`${this.baseUrl}/checks/${token}`, {
+        method: 'PUT',
+        headers: {
+          'X-API-KEY': this.apiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(options)
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to update check: ${response.status} ${response.statusText}`)
+      }
+
+      return response.json()
+    } catch (error) {
+      console.error(`Error updating Updown.io check ${token}:`, error)
+      return null
+    }
+  }
+
+  async deleteCheck(token: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/checks/${token}`, {
+        method: 'DELETE',
+        headers: {
+          'X-API-KEY': this.apiKey
+        }
+      })
+
+      return response.ok
+    } catch (error) {
+      console.error(`Error deleting Updown.io check ${token}:`, error)
+      return false
+    }
+  }
+
+  // Helper method to get uptime percentage as a formatted string
+  formatUptime(uptime: number): string {
+    return `${(uptime * 100).toFixed(2)}%`
+  }
+
+  // Helper method to get status color based on uptime
+  getStatusColor(uptime: number): string {
+    if (uptime >= 0.99) return 'green'
+    if (uptime >= 0.95) return 'yellow'
+    return 'red'
+  }
+
+  // Helper method to check if service is configured
+  isConfigured(): boolean {
+    return !!this.apiKey
   }
 }
 
-/**
- * Get human-readable period description
- */
-export function getPeriodDescription(periodInSeconds: number): string {
-  if (periodInSeconds < 60) {
-    return `${periodInSeconds}s`
-  } else if (periodInSeconds < 3600) {
-    return `${Math.floor(periodInSeconds / 60)}m`
-  } else {
-    return `${Math.floor(periodInSeconds / 3600)}h`
-  }
-}
-
-/**
- * Estimate monthly cost based on updown.io pricing
- * Note: This is an estimate based on public pricing, actual costs may vary
- */
-export function estimateMonthlyCost(stats: UpdownStats): { 
-  estimatedCost: number
-  tier: string
-  description: string
-} {
-  const { activeChecks, totalMonthlyRequests } = stats
-
-  // Updown.io pricing tiers (as of 2024, may change)
-  if (activeChecks <= 10 && totalMonthlyRequests <= 100000) {
-    return {
-      estimatedCost: 0,
-      tier: 'Free',
-      description: 'Up to 10 checks, 100k requests/month'
-    }
-  } else if (activeChecks <= 50) {
-    return {
-      estimatedCost: 15,
-      tier: 'Starter',
-      description: 'Up to 50 checks, unlimited requests'
-    }
-  } else if (activeChecks <= 200) {
-    return {
-      estimatedCost: 35,
-      tier: 'Business',
-      description: 'Up to 200 checks, unlimited requests'
-    }
-  } else {
-    return {
-      estimatedCost: 75,
-      tier: 'Enterprise',
-      description: '500+ checks, unlimited requests'
-    }
-  }
-}
-
-/**
- * Get Updown statistics from the database
- */
-export async function getUpdownStats() {
-  const total = await prisma.user.count({
-    where: { website: { not: null } }
-  })
-
-  const up = await prisma.user.count({ where: { websiteStatus: 'up' } })
-  const down = await prisma.user.count({ where: { websiteStatus: 'down' } })
-  const unknown = await prisma.user.count({ 
-    where: { 
-      OR: [
-        { websiteStatus: null },
-        { websiteStatus: 'unknown' }
-      ]
-    }
-  })
-  const checking = await prisma.user.count({ where: { websiteStatus: 'checking' } })
-
-  const percentage = total > 0 ? Math.round((up / total) * 100) : 0
-
-  return { total, up, down, unknown, checking, percentage }
-}
+// Export a singleton instance
+export const updownStats = new UpdownStatsService()

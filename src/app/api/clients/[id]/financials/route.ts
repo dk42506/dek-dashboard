@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { freshBooksService } from '@/lib/freshbooks'
+import { freshbooks } from '@/lib/freshbooks'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(
@@ -48,46 +48,16 @@ export async function GET(
       }, { status: 400 })
     }
 
-    try {
-      // Initialize FreshBooks service
-      await freshBooksService.initialize(session.user.id)
-
-      // Find matching FreshBooks client
-      const fbClient = client.businessName 
-        ? await freshBooksService.findClientByBusinessName(client.businessName)
-        : null
-
-      if (!fbClient) {
-        return NextResponse.json({
-          error: 'No matching FreshBooks client found',
-          client,
-          matched: false,
-          configured: true
-        })
-      }
-
-      // Get financial summary
-      const financialSummary = await freshBooksService.getClientFinancialSummary(fbClient.id)
-
-      return NextResponse.json({
-        success: true,
-        client,
-        fbClient,
-        matched: true,
-        configured: true,
-        financials: financialSummary
-      })
-
-    } catch (fbError) {
-      console.error('FreshBooks API Error:', fbError)
-      return NextResponse.json({
-        error: 'Failed to fetch FreshBooks data',
-        client,
-        matched: false,
-        configured: true,
-        fbError: fbError instanceof Error ? fbError.message : 'Unknown error'
-      })
-    }
+    // For now, return a placeholder response indicating FreshBooks integration is available
+    // Full implementation would require OAuth flow completion
+    return NextResponse.json({
+      success: true,
+      client,
+      matched: false,
+      configured: freshbooks.isConfigured(),
+      message: 'FreshBooks integration configured but requires OAuth authentication',
+      authUrl: freshbooks.isConfigured() ? freshbooks.getAuthorizationUrl() : null
+    })
 
   } catch (error) {
     console.error('Error fetching client financials:', error)
