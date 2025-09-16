@@ -156,7 +156,14 @@ export async function getUpdownStats() {
 
   const up = await prisma.user.count({ where: { websiteStatus: 'up' } })
   const down = await prisma.user.count({ where: { websiteStatus: 'down' } })
-  const unknown = await prisma.user.count({ where: { websiteStatus: { in: [null, 'unknown'] } } })
+  const unknown = await prisma.user.count({ 
+    where: { 
+      OR: [
+        { websiteStatus: null },
+        { websiteStatus: 'unknown' }
+      ]
+    }
+  })
   const checking = await prisma.user.count({ where: { websiteStatus: 'checking' } })
 
   const percentage = total > 0 ? Math.round((up / total) * 100) : 0

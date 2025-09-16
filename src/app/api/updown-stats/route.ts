@@ -65,7 +65,12 @@ export async function GET(request: NextRequest) {
       where: { websiteStatus: 'down' }
     })
     const unknown = await prisma.user.count({
-      where: { websiteStatus: { in: [null, 'unknown'] } }
+      where: { 
+        OR: [
+          { websiteStatus: null },
+          { websiteStatus: 'unknown' }
+        ]
+      }
     })
     const checking = await prisma.user.count({
       where: { websiteStatus: 'checking' }

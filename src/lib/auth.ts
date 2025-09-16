@@ -1,15 +1,15 @@
 import type { NextAuthOptions } from 'next-auth'
+import CredentialsProvider from 'next-auth/providers/credentials'
+import bcrypt from 'bcryptjs'
+import { prisma } from '@/lib/prisma'
 
-/**
- * Minimal authOptions placeholder used during build.
- * Ensure this file matches your real NextAuth configuration in production.
- */
 export const authOptions: NextAuthOptions = {
-  // Providers will be configured at runtime; keep minimal shape for build.
-  providers: [],
-  session: { strategy: 'jwt' },
-  pages: {},
-}
+  providers: [
+    CredentialsProvider({
+      name: 'credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
