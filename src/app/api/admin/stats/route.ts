@@ -59,14 +59,48 @@ export async function GET() {
 
     // Try to get total revenue from FreshBooks
     let totalRevenue = 0
+    let freshbooksConnected = false
+    
     try {
       const settings = await prisma.adminSettings.findUnique({
         where: { userId: session.user.id }
       })
 
-      // FreshBooks integration would require OAuth flow completion
-      // For now, just return 0 revenue
-      totalRevenue = 0
+      if (settings?.freshbooksAccessToken && settings?.freshbooksAccountId) {
+        freshbooksConnected = true
+        
+        // Set the access token and try to fetch financial data
+        freshbooks.setAccessToken(settings.freshbooksAccessToken)
+        
+        try {
+          const financialSummary = await freshbooks.getFinancialSummary(settings.freshbooksAccountId)
+          totalRevenue = financialSummary.totalRevenue
+        } catch (fbError: any) {
+          console.error('FreshBooks API error:', fbError)
+          
+          // If token is expired, try to refresh it
+          if (fbError.message?.includes('401') && settings.freshbooksRefreshToken) {
+            try {
+              const newAccessToken = await freshbooks.refreshAccessToken(settings.freshbooksRefreshToken)
+              if (newAccessToken) {
+                // Update the stored access token
+                await prisma.adminSettings.update({
+                  where: { userId: session.user.id },
+                  data: { freshbooksAccessToken: newAccessToken }
+                })
+                
+                // Retry the API call with new token
+                freshbooks.setAccessToken(newAccessToken)
+                const financialSummary = await freshbooks.getFinancialSummary(settings.freshbooksAccountId)
+                totalRevenue = financialSummary.totalRevenue
+              }
+            } catch (refreshError) {
+              console.error('Failed to refresh FreshBooks token:', refreshError)
+              freshbooksConnected = false
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error('Error fetching FreshBooks revenue:', error)
       // Continue without revenue data
