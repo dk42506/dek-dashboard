@@ -2,12 +2,13 @@
 import { useEffect, useState } from 'react'
 
 type UpdownStats = {
-  total: number
-  up: number
-  down: number
-  unknown: number
-  checking: number
-  percentage: number
+  totalChecks: number
+  onlineChecks: number
+  offlineChecks: number
+  unknownChecks: number
+  averageUptime: number
+  estimatedMonthlyCost: number
+  checks: any[]
 }
 
 export default function UpdownStatsWidget() {
@@ -57,20 +58,20 @@ export default function UpdownStatsWidget() {
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Website Uptime Overview</h3>
       <div className="grid grid-cols-2 gap-3">
         <div className="text-sm text-gray-500">Monitored</div>
-        <div className="font-medium text-gray-900">{stats.total}</div>
+        <div className="font-medium text-gray-900">{stats.totalChecks}</div>
 
         <div className="text-sm text-green-600">Online</div>
-        <div className="font-medium text-gray-900">{stats.up}</div>
+        <div className="font-medium text-gray-900">{stats.onlineChecks}</div>
 
         <div className="text-sm text-red-600">Offline</div>
-        <div className="font-medium text-gray-900">{stats.down}</div>
+        <div className="font-medium text-gray-900">{stats.offlineChecks}</div>
 
         <div className="text-sm text-yellow-600">Unknown</div>
-        <div className="font-medium text-gray-900">{stats.unknown}</div>
+        <div className="font-medium text-gray-900">{stats.unknownChecks}</div>
       </div>
 
       <div className="mt-4 text-xs text-gray-500">
-        Uptime percentage (estimated): <span className="font-medium text-gray-900">{stats.percentage}%</span>
+        Uptime percentage (estimated): <span className="font-medium text-gray-900">{stats.averageUptime}%</span>
       </div>
     </div>
   )

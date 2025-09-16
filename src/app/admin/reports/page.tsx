@@ -6,8 +6,6 @@ import { BarChart3, TrendingUp, DollarSign, Users, Calendar, Download, Filter, R
 export default function ReportsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedPeriod, setSelectedPeriod] = useState('30')
-  const [freshbooksConnected, setFreshbooksConnected] = useState(false)
-  const [showFreshbooksAlert, setShowFreshbooksAlert] = useState(true)
   const [reportData, setReportData] = useState({
     revenue: {
       current: 0,
@@ -34,16 +32,11 @@ export default function ReportsPage() {
         // Get admin stats for revenue data
         const statsResponse = await fetch('/api/admin/stats')
         let totalRevenue = 0
-        let freshbooksStatus = false
         
         if (statsResponse.ok) {
           const statsData = await statsResponse.json()
           totalRevenue = statsData.totalRevenue || 0
-          freshbooksStatus = totalRevenue > 0
         }
-        
-        setFreshbooksConnected(freshbooksStatus)
-        setShowFreshbooksAlert(!freshbooksStatus)
         
         // Try to get reports data
         const response = await fetch(`/api/admin/reports?period=${selectedPeriod}`)
@@ -134,42 +127,6 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      {/* FreshBooks Connection Alert */}
-      {!freshbooksConnected && showFreshbooksAlert && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
-            <div className="flex-1">
-              <h3 className="text-sm font-semibold text-red-800 mb-1">
-                FreshBooks Not Connected
-              </h3>
-              <p className="text-sm text-red-700 mb-3">
-                Revenue data is currently unavailable. Connect your FreshBooks account to view real financial metrics and reports.
-              </p>
-              <div className="flex items-center gap-3">
-                <a
-                  href="/admin/settings"
-                  className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm transition-colors"
-                >
-                  Connect FreshBooks
-                </a>
-                <button
-                  onClick={() => setShowFreshbooksAlert(false)}
-                  className="text-sm text-red-600 hover:text-red-800 transition-colors"
-                >
-                  Dismiss
-                </button>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowFreshbooksAlert(false)}
-              className="text-red-400 hover:text-red-600 transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

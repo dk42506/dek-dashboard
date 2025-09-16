@@ -13,8 +13,6 @@ export default function AdminDashboard() {
     totalRevenue: 0,
   })
   const [isLoading, setIsLoading] = useState(true)
-  const [freshbooksConnected, setFreshbooksConnected] = useState(false)
-  const [showFreshbooksAlert, setShowFreshbooksAlert] = useState(true)
 
   useEffect(() => {
     const loadStats = async () => {
@@ -29,9 +27,6 @@ export default function AdminDashboard() {
             newThisMonth: data.newThisMonth,
             totalRevenue: data.totalRevenue || 0,
           })
-          const fbConnected = data.totalRevenue > 0
-          setFreshbooksConnected(fbConnected)
-          setShowFreshbooksAlert(!fbConnected)
         } else {
           console.error('Failed to fetch stats')
           // Fallback to mock data
@@ -86,7 +81,7 @@ export default function AdminDashboard() {
     },
     {
       name: 'Total Revenue',
-      value: freshbooksConnected ? `$${stats.totalRevenue.toLocaleString()}` : '$0',
+      value: `$${stats.totalRevenue.toLocaleString()}`,
       icon: TrendingUp,
       color: 'bg-orange-500',
       bgColor: 'bg-orange-50',
@@ -96,42 +91,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* FreshBooks Connection Alert */}
-      {!freshbooksConnected && showFreshbooksAlert && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
-            <div className="flex-1">
-              <h3 className="text-sm font-semibold text-red-800 mb-1">
-                FreshBooks Not Connected
-              </h3>
-              <p className="text-sm text-red-700 mb-3">
-                Revenue data is currently unavailable. Connect your FreshBooks account to view real financial metrics and track your business performance.
-              </p>
-              <div className="flex items-center gap-3">
-                <a
-                  href="/admin/settings"
-                  className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm transition-colors"
-                >
-                  Connect FreshBooks
-                </a>
-                <button
-                  onClick={() => setShowFreshbooksAlert(false)}
-                  className="text-sm text-red-600 hover:text-red-800 transition-colors"
-                >
-                  Dismiss
-                </button>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowFreshbooksAlert(false)}
-              className="text-red-400 hover:text-red-600 transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl p-6 text-white">
