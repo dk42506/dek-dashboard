@@ -28,8 +28,6 @@ export async function pingWebsite(url: string): Promise<WebsiteStatus> {
     // Ensure URL has protocol
     const fullUrl = url.startsWith('http') ? url : `https://${url}`
     
-    console.log(`Checking website: ${fullUrl}`)
-    
     // Use fetch with proper headers and timeout
     const response = await fetch(fullUrl, {
       method: 'HEAD',
@@ -43,8 +41,6 @@ export async function pingWebsite(url: string): Promise<WebsiteStatus> {
     })
     
     const responseTime = Date.now() - startTime
-    
-    console.log(`Response status: ${response.status}, Response time: ${responseTime}ms`)
     
     // Only consider 2xx and 3xx status codes as "up"
     const isUp = response.status >= 200 && response.status < 400

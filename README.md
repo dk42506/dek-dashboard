@@ -1,233 +1,304 @@
 # DEK Innovations Dashboard
 
-A Next.js client management dashboard for DEK Innovations with role-based authentication and a clean, professional interface matching the DEK Innovations brand.
+A comprehensive client management dashboard built with Next.js, featuring client management, website monitoring, financial integration, and business analytics.
 
-## Features
-
-### Phase 1 (Current)
-- **Authentication System**: NextAuth.js with credentials provider
-- **Role-Based Access**: Admin and Client roles with protected routes
-- **Admin Dashboard**: 
-  - Overview with stats and recent activity
-  - Client management capabilities
-  - Professional sidebar navigation
-  - Placeholder sections for future integrations
-- **Client Portal**: 
-  - Limited view showing only client's own profile
-  - Business information display
-  - Placeholder sections for billing and analytics
-- **Responsive Design**: Mobile-friendly interface
-- **DEK Innovations Branding**: Custom color scheme and typography
-
-### Future Phases (Planned)
-- FreshBooks API integration (invoices & payments)
-- GoHighLevel API integration (ads & CRM data)
-- Profit/expense tracking
-- Calendar & meetings
-- Reports and analytics
-- Website uptime monitoring
-
-## Tech Stack
-
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: TailwindCSS with custom DEK Innovations theme
-- **Authentication**: NextAuth.js
-- **Database**: SQLite with Prisma ORM
-- **Icons**: Lucide React
-- **Deployment**: Ready for Vercel
-
-## Getting Started
+## 🚀 Quick Start - Deploy to Vercel
 
 ### Prerequisites
+- GitHub account
+- Vercel account (free tier works)
+- Your admin credentials ready
 
-- Node.js 18+ 
-- npm or yarn
+### Step 1: Deploy to Vercel
 
-### Installation
-
-1. **Clone and navigate to the project**:
+1. **Push to GitHub** (if not already done):
    ```bash
-   cd dek-dashboard
+   git add .
+   git commit -m "Ready for production deployment"
+   git push origin main
    ```
 
-2. **Install dependencies**:
+2. **Deploy to Vercel**:
+   - Go to [vercel.com](https://vercel.com)
+   - Click "New Project"
+   - Import your GitHub repository `dk42506/dek-dashboard`
+   - Vercel will auto-detect Next.js settings
+
+3. **Configure Environment Variables** in Vercel:
+   ```
+   DATABASE_URL=file:./prisma/dev.db
+   NEXTAUTH_URL=https://dashboard.dekinnovations.com
+   NEXTAUTH_SECRET=your-super-secret-key-change-this-now
+   ADMIN_EMAIL=dkeller@dekinnovations.com
+   ADMIN_PASSWORD=DylanK6205
+   NODE_ENV=production
+   ```
+
+4. **Set Custom Domain**:
+   - In Vercel project settings → Domains
+   - Add `dashboard.dekinnovations.com`
+   - Update your DNS to point to Vercel
+
+### Step 2: Initialize Database
+
+After deployment, run the database setup:
+
+1. **Generate Prisma Client**:
    ```bash
-   npm install
+   npx prisma generate
    ```
 
-3. **Set up environment variables**:
-   The `.env.local` file is already configured with default values:
-   ```env
-   DATABASE_URL="file:./prisma/dev.db"
-   NEXTAUTH_URL="http://localhost:3000"
-   NEXTAUTH_SECRET="your-secret-key-here-change-in-production"
-   ADMIN_EMAIL="admin@dekinnovations.com"
-   ADMIN_PASSWORD="admin123"
-   ```
-
-4. **Initialize the database**:
+2. **Push Database Schema**:
    ```bash
    npx prisma db push
    ```
 
-5. **Seed the database with sample data**:
+3. **Seed Admin Account**:
    ```bash
-   DATABASE_URL="file:./prisma/dev.db" npx tsx src/lib/seed.ts
+   npm run seed
    ```
 
-6. **Start the development server**:
+### Step 3: Configure Your Dashboard
+
+1. **Login**: Go to `https://dashboard.dekinnovations.com`
+   - Email: `dkeller@dekinnovations.com`
+   - Password: `DylanK6205`
+
+2. **Configure Settings**:
+   - Go to Settings
+   - Add your FreshBooks API credentials
+   - Add your Updown.io API key (optional)
+   - Set up business profile
+
+3. **Start Adding Clients**:
+   - Click "Add New Client"
+   - Fill in client details
+   - Watch notifications appear in real-time
+
+## 🔗 Add Dashboard Button to Your Website
+
+Add this HTML to your main website to link to the dashboard:
+
+```html
+<!-- Dashboard Access Button -->
+<div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+  <a href="https://dashboard.dekinnovations.com" 
+     target="_blank"
+     style="
+       display: inline-flex;
+       align-items: center;
+       gap: 8px;
+       background: linear-gradient(135deg, #8B7D8B, #6B5B6B);
+       color: white;
+       padding: 12px 20px;
+       border-radius: 8px;
+       text-decoration: none;
+       font-family: 'Inter', sans-serif;
+       font-weight: 600;
+       font-size: 14px;
+       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+       transition: all 0.3s ease;
+       border: none;
+     "
+     onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.2)'"
+     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+    </svg>
+    Dashboard
+  </a>
+</div>
+```
+
+Or for a more subtle approach, add to your navigation:
+
+```html
+<!-- In your navigation menu -->
+<a href="https://dashboard.dekinnovations.com" 
+   target="_blank"
+   style="
+     color: #8B7D8B;
+     text-decoration: none;
+     font-weight: 500;
+     padding: 8px 16px;
+     border-radius: 6px;
+     transition: all 0.2s ease;
+   "
+   onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#6B5B6B'"
+   onmouseout="this.style.backgroundColor='transparent'; this.style.color='#8B7D8B'">
+  Client Dashboard
+</a>
+```
+
+## 🛠 Development Setup
+
+### Local Development
+
+1. **Clone and Install**:
+   ```bash
+   git clone https://github.com/dk42506/dek-dashboard.git
+   cd dek-dashboard
+   npm install
+   ```
+
+2. **Environment Setup**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your local settings
+   ```
+
+3. **Database Setup**:
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   npm run seed
+   ```
+
+4. **Start Development**:
    ```bash
    npm run dev
    ```
 
-7. **Open your browser**:
-   Navigate to [http://localhost:3000](http://localhost:3000)
+### Production Updates
 
-## Test Accounts
+To update the live dashboard:
 
-### Admin Account
-- **Email**: `admin@dekinnovations.com`
-- **Password**: `admin123`
-- **Access**: Full dashboard with client management
-
-### Sample Client Accounts
-- **John's Auto Shop**
-  - Email: `john@johnsautoshop.com`
-  - Password: `client123`
-  
-- **Sarah's Bakery**
-  - Email: `sarah@sarahsbakery.com`
-  - Password: `client123`
-  
-- **Wilson Plumbing Services**
-  - Email: `mike@wilsonplumbing.com`
-  - Password: `client123`
-
-## Project Structure
-
-```
-dek-dashboard/
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── admin/             # Admin dashboard pages
-│   │   ├── auth/              # Authentication pages
-│   │   ├── client/            # Client portal pages
-│   │   └── api/               # API routes
-│   ├── components/            # React components
-│   │   ├── admin/             # Admin-specific components
-│   │   └── client/            # Client-specific components
-│   ├── lib/                   # Utility functions
-│   │   ├── auth.ts           # NextAuth configuration
-│   │   ├── prisma.ts         # Database client
-│   │   ├── seed.ts           # Database seeding
-│   │   └── utils.ts          # Helper functions
-│   └── types/                 # TypeScript type definitions
-├── prisma/                    # Database schema and migrations
-├── public/                    # Static assets
-└── README.md
-```
-
-## Key Features Explained
-
-### Authentication Flow
-1. Users visit the root page and are redirected to sign-in
-2. After authentication, users are redirected based on their role:
-   - Admins → `/admin` (full dashboard)
-   - Clients → `/client` (limited portal)
-3. Middleware protects routes and enforces role-based access
-
-### Admin Dashboard
-- **Overview**: Stats cards, recent activity, quick actions
-- **Client Management**: View, search, and manage all clients
-- **Navigation**: Sidebar with dashboard, clients, reports, settings
-- **Placeholder Sections**: Ready for future API integrations
-
-### Client Portal
-- **Profile View**: Business information and contact details
-- **Limited Access**: Only sees their own data
-- **Placeholder Sections**: Billing, ads performance, website analytics
-
-### Design System
-- **Colors**: Custom DEK Innovations palette (primary: #8B7D8B, secondary: #7D4F5C)
-- **Typography**: Inter for body text, Space Grotesk for headings
-- **Components**: Consistent styling with hover effects and animations
-- **Responsive**: Mobile-first design with Tailwind breakpoints
-
-## Development
-
-### Adding New Features
-1. Create components in appropriate directories (`/admin` or `/client`)
-2. Add new pages in the `src/app` directory
-3. Update types in `src/types/index.ts`
-4. Use the established design patterns and color scheme
-
-### Database Changes
-1. Update `prisma/schema.prisma`
-2. Run `npx prisma db push` to apply changes
-3. Update TypeScript types as needed
-
-### Styling Guidelines
-- Use the custom Tailwind classes: `btn-primary`, `btn-secondary`, `card-hover`
-- Follow the DEK Innovations color scheme
-- Maintain consistent spacing and typography
-
-## Deployment
-
-### Vercel Deployment
-1. **Connect to Vercel**:
-   - Push code to GitHub
-   - Connect repository to Vercel
-   - Set custom domain: `dashboard.dekinnovations.com`
-
-2. **Environment Variables**:
-   Set these in Vercel dashboard:
-   ```env
-   DATABASE_URL="your-production-database-url"
-   NEXTAUTH_URL="https://dashboard.dekinnovations.com"
-   NEXTAUTH_SECRET="your-secure-secret-key"
-   ADMIN_EMAIL="admin@dekinnovations.com"
-   ADMIN_PASSWORD="your-secure-admin-password"
+1. **Make Changes Locally**
+2. **Test Thoroughly**:
+   ```bash
+   npm run build
+   npm run start
    ```
 
-3. **Database Setup**:
-   - For production, consider upgrading to PostgreSQL
-   - Run database migrations in production environment
-   - Seed with initial admin user
+3. **Deploy**:
+   ```bash
+   git add .
+   git commit -m "Update: description of changes"
+   git push origin main
+   ```
+   
+   Vercel will automatically deploy your changes.
 
-### Production Considerations
-- Change default passwords
-- Use a secure `NEXTAUTH_SECRET`
-- Set up proper database backups
-- Configure monitoring and logging
-- Enable HTTPS and security headers
+## 📊 Features
 
-## Troubleshooting
+### ✅ Client Management
+- Add, edit, and manage client profiles
+- Track business information and contacts
+- Client portal access with password management
 
-### Common Issues
+### ✅ Website Monitoring
+- Integration with Updown.io for uptime monitoring
+- Real-time website status tracking
+- Automated alerts for downtime
 
-1. **Database Connection Errors**:
-   - Ensure `DATABASE_URL` is set correctly
-   - Run `npx prisma db push` to sync schema
+### ✅ Financial Integration
+- FreshBooks API integration
+- Revenue tracking and reporting
+- Financial summaries and analytics
 
-2. **Authentication Issues**:
-   - Check `NEXTAUTH_URL` matches your domain
-   - Verify `NEXTAUTH_SECRET` is set
+### ✅ Notification System
+- Real-time notifications for new clients
+- Website monitoring alerts
+- Activity tracking and history
 
-3. **Build Errors**:
-   - Clear `.next` folder and rebuild
-   - Check for TypeScript errors
+### ✅ Business Analytics
+- Client growth metrics
+- Revenue reporting
+- Monthly business summaries
 
-4. **Styling Issues**:
-   - Ensure Tailwind is configured properly
-   - Check for conflicting CSS classes
+### ✅ Security Features
+- Secure authentication with NextAuth.js
+- Role-based access control
+- Password encryption and management
 
-## Support
+## 🔧 Configuration
 
-For questions or issues:
-- **Email**: admin@dekinnovations.com
-- **Business Hours**: Mon - Fri, 9AM - 6PM EST
+### Environment Variables
 
-## License
+```bash
+# Database
+DATABASE_URL="file:./prisma/dev.db"
 
-Private project for DEK Innovations. All rights reserved.
+# Authentication
+NEXTAUTH_URL="https://dashboard.dekinnovations.com"
+NEXTAUTH_SECRET="your-secret-key-here"
+
+# Admin Account
+ADMIN_EMAIL="dkeller@dekinnovations.com"
+ADMIN_PASSWORD="DylanK6205"
+
+# API Integrations (Optional)
+UPDOWN_API_KEY="your-updown-api-key"
+FRESHBOOKS_CLIENT_ID="your-freshbooks-client-id"
+FRESHBOOKS_CLIENT_SECRET="your-freshbooks-client-secret"
+```
+
+### API Integrations
+
+#### FreshBooks Setup
+1. Go to [FreshBooks Developers](https://www.freshbooks.com/api)
+2. Create an application
+3. Get your Client ID and Client Secret
+4. Add to dashboard settings
+
+#### Updown.io Setup
+1. Sign up at [Updown.io](https://updown.io)
+2. Get your API key from settings
+3. Add to dashboard settings
+
+## 🚀 Deployment Architecture
+
+```
+dashboard.dekinnovations.com
+├── Next.js App (Vercel)
+├── SQLite Database (Vercel)
+├── Authentication (NextAuth.js)
+├── API Routes (Serverless Functions)
+└── Static Assets (Vercel CDN)
+```
+
+## 📱 Mobile Responsive
+
+The dashboard is fully responsive and works on:
+- Desktop computers
+- Tablets
+- Mobile phones
+- All modern browsers
+
+## 🔒 Security
+
+- All passwords are hashed with bcrypt
+- Session-based authentication
+- CSRF protection
+- SQL injection prevention
+- XSS protection
+- Secure headers
+
+## 📈 Performance
+
+- Server-side rendering with Next.js
+- Optimized images and assets
+- CDN delivery via Vercel
+- Efficient database queries
+- Caching strategies
+
+## 🆘 Support
+
+If you encounter any issues:
+
+1. **Check the logs** in Vercel dashboard
+2. **Verify environment variables** are set correctly
+3. **Ensure database is properly initialized**
+4. **Check API integrations** are configured
+
+## 📝 License
+
+This project is proprietary software for DEK Innovations.
+
+---
+
+**Ready to manage your clients like a pro!** 🎉
+
+Login at: https://dashboard.dekinnovations.com
+- Email: dkeller@dekinnovations.com
+- Password: DylanK6205

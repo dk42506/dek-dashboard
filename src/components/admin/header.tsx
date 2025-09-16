@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useState, useRef, useEffect } from 'react'
-import { Bell, Search, User, X, CheckCircle, AlertCircle, Info } from 'lucide-react'
+import { Bell, Search, User, X, CheckCircle, AlertCircle, Info, UserPlus, Globe } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 
@@ -12,44 +12,34 @@ export function AdminHeader() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [showSearchResults, setShowSearchResults] = useState(false)
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false)
   const notificationRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLDivElement>(null)
 
-  // Mock notifications data
-  const notifications = [
-    {
-      id: 1,
-      type: 'success',
-      title: 'New client added',
-      message: 'John Smith from Auto Shop has been added to your client list',
-      time: '2 minutes ago',
-      read: false
-    },
-    {
-      id: 2,
-      type: 'info',
-      title: 'Payment received',
-      message: 'Sarah Johnson has paid invoice #1234',
-      time: '1 hour ago',
-      read: false
-    },
-    {
-      id: 3,
-      type: 'warning',
-      title: 'Website down',
-      message: 'Mike Wilson\'s website is experiencing downtime',
-      time: '3 hours ago',
-      read: true
-    },
-    {
-      id: 4,
-      type: 'info',
-      title: 'Monthly report ready',
-      message: 'Your monthly analytics report is ready for review',
-      time: '1 day ago',
-      read: true
+  // Load notifications when dropdown is opened
+  useEffect(() => {
+    if (showNotifications && notifications.length === 0) {
+      loadNotifications()
     }
-  ]
+  }, [showNotifications])
+
+  const loadNotifications = async () => {
+    setIsLoadingNotifications(true)
+    try {
+      const response = await fetch('/api/notifications')
+      if (response.ok) {
+        const data = await response.json()
+        setNotifications(data)
+      } else {
+        console.error('Failed to fetch notifications')
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error)
+    } finally {
+      setIsLoadingNotifications(false)
+    }
+  }
 
   // Mock search results
   const searchResults = [
@@ -179,51 +169,74 @@ export function AdminHeader() {
 
               {/* Notifications Dropdown */}
               {showNotifications && (
-                <div className="absolute top-full right-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto backdrop-blur-sm">
-                  <div className="p-4 border-b border-gray-100">
+                <div data-notification-dropdown className="absolute top-full right-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+                  <div className="p-4 border-b border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-800">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Notifications</h3>
                       <button
                         onClick={() => setShowNotifications(false)}
-                        className="text-gray-400 hover:text-gray-600"
+                        className="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-100"
                       >
                         <X className="h-4 w-4" />
                       </button>
                     </div>
                     {unreadCount > 0 && (
-                      <p className="text-xs text-gray-500 mt-1">{unreadCount} unread</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{unreadCount} unread</p>
                     )}
                   </div>
 
-                  <div className="max-h-64 overflow-y-auto">
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors ${
-                          !notification.read ? 'bg-blue-50' : ''
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          {getNotificationIcon(notification.type)}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {notification.title}
+                  <div className="max-h-64 overflow-y-auto bg-white dark:bg-gray-800">
+                    {isLoadingNotifications ? (
+                      <div className="p-4 text-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mx-auto"></div>
+                        <p className="text-sm text-gray-500 mt-2">Loading notifications...</p>
+                      </div>
+                    ) : notifications.length === 0 ? (
+                      <div className="p-8 text-center">
+                        <Bell className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                        <p className="text-sm text-gray-500 mb-1">No notifications</p>
+                        <p className="text-xs text-gray-400">You're all caught up!</p>
+                      </div>
+                    ) : (
+                      notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`p-4 border-b border-gray-50 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                            !notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-800'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            {notification.type === 'new_client' ? (
+                              <UserPlus className="h-4 w-4 text-green-500" />
+                            ) : notification.type === 'website_down' ? (
+                              <AlertCircle className="h-4 w-4 text-red-500" />
+                            ) : notification.type === 'website_up' ? (
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Info className="h-4 w-4 text-blue-500" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                  {notification.title}
+                                </p>
+                                {!notification.read && (
+                                  <div className="w-2 h-2 bg-blue-500 rounded-full ml-2"></div>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{notification.message}</p>
+                              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                                {new Date(notification.createdAt).toLocaleDateString()} at {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </p>
-                              {!notification.read && (
-                                <div className="w-2 h-2 bg-blue-500 rounded-full ml-2"></div>
-                              )}
                             </div>
-                            <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                            <p className="text-xs text-gray-400 mt-2">{notification.time}</p>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
 
-                  <div className="p-3 border-t border-gray-100">
-                    <button className="w-full text-center text-sm text-primary-600 hover:text-primary-700 font-medium">
+                  <div className="p-3 border-t border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-800">
+                    <button className="w-full text-center text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium">
                       View all notifications
                     </button>
                   </div>

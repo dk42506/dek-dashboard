@@ -51,6 +51,8 @@ model User {
   sessions      Session[]
   notes         Note[]
   adminSettings AdminSettings?
+  notifications Notification[]
+  clientNotifications Notification[] @relation("ClientNotifications")
   
   // Client-specific fields
   businessName  String?
@@ -120,6 +122,21 @@ model AdminSettings {
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
   user                      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // 'new_client', 'website_down', 'website_up'
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  userId    String?  // null for system notifications
+  clientId  String?  // related client if applicable
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user   User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client User? @relation("ClientNotifications", fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {

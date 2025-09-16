@@ -509,7 +509,7 @@ export default function SettingsPage() {
                   Updown.io API Key
                 </label>
                 <input
-                  type="text"
+                  type="password"
                   value={settings.updownApiKey}
                   onChange={(e) => handleChange('updownApiKey', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"

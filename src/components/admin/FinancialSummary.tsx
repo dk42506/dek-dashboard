@@ -239,31 +239,101 @@ export default function FinancialSummary({ clientId, clientName, businessName }:
         </div>
       </div>
 
-      {/* Recent Invoices */}
+      {/* Invoice Overview */}
       {financialData.invoices.length > 0 && (
         <div className="mb-6">
-          <h4 className="text-md font-semibold text-gray-900 mb-3">Recent Invoices</h4>
-          <div className="space-y-2">
-            {financialData.invoices.slice(0, 5).map((invoice, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">#{invoice.invoice_number}</p>
-                  <p className="text-sm text-gray-600">
-                    {formatDate(invoice.create_date)} • {invoice.v3_status}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-gray-900">
-                    {formatCurrency(parseFloat(invoice.amount.amount))}
-                  </p>
-                  {parseFloat(invoice.outstanding.amount) > 0 && (
-                    <p className="text-sm text-orange-600">
-                      {formatCurrency(parseFloat(invoice.outstanding.amount))} due
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-md font-semibold text-gray-900">Invoice Overview</h4>
+            <span className="text-sm text-gray-500">{financialData.invoices.length} total invoices</span>
+          </div>
+          
+          {/* Invoice Status Summary */}
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="bg-green-50 rounded-lg p-3 text-center">
+              <p className="text-sm font-medium text-green-800">Paid</p>
+              <p className="text-lg font-bold text-green-900">
+                {financialData.invoices.filter(inv => inv.v3_status === 'paid').length}
+              </p>
+            </div>
+            <div className="bg-orange-50 rounded-lg p-3 text-center">
+              <p className="text-sm font-medium text-orange-800">Outstanding</p>
+              <p className="text-lg font-bold text-orange-900">
+                {financialData.invoices.filter(inv => parseFloat(inv.outstanding.amount) > 0).length}
+              </p>
+            </div>
+            <div className="bg-blue-50 rounded-lg p-3 text-center">
+              <p className="text-sm font-medium text-blue-800">Draft</p>
+              <p className="text-lg font-bold text-blue-900">
+                {financialData.invoices.filter(inv => inv.v3_status === 'draft').length}
+              </p>
+            </div>
+          </div>
+
+          {/* Recent Invoices List */}
+          <div className="space-y-3">
+            <h5 className="text-sm font-medium text-gray-700">Recent Invoices</h5>
+            {financialData.invoices.slice(0, 8).map((invoice, index) => {
+              const isOverdue = invoice.v3_status !== 'paid' && 
+                parseFloat(invoice.outstanding.amount) > 0 && 
+                new Date(invoice.due_date) < new Date()
+              
+              const getStatusColor = (status: string, isOverdue: boolean) => {
+                if (isOverdue) return 'text-red-600 bg-red-50'
+                switch (status) {
+                  case 'paid': return 'text-green-600 bg-green-50'
+                  case 'sent': return 'text-blue-600 bg-blue-50'
+                  case 'draft': return 'text-gray-600 bg-gray-50'
+                  case 'partial': return 'text-orange-600 bg-orange-50'
+                  default: return 'text-gray-600 bg-gray-50'
+                }
+              }
+
+              return (
+                <div key={index} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <p className="font-medium text-gray-900">#{invoice.invoice_number}</p>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.v3_status, isOverdue)}`}>
+                        {isOverdue ? 'Overdue' : invoice.v3_status.charAt(0).toUpperCase() + invoice.v3_status.slice(1)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <span>Created: {formatDate(invoice.create_date)}</span>
+                      <span>Due: {formatDate(invoice.due_date)}</span>
+                      {invoice.date_paid && (
+                        <span className="text-green-600">Paid: {formatDate(invoice.date_paid)}</span>
+                      )}
+                    </div>
+                    {invoice.notes && (
+                      <p className="text-sm text-gray-500 mt-1 truncate">{invoice.notes}</p>
+                    )}
+                  </div>
+                  <div className="text-right ml-4">
+                    <p className="font-semibold text-gray-900 mb-1">
+                      {formatCurrency(parseFloat(invoice.amount.amount))}
                     </p>
-                  )}
+                    {parseFloat(invoice.paid.amount) > 0 && parseFloat(invoice.outstanding.amount) > 0 && (
+                      <p className="text-xs text-blue-600">
+                        {formatCurrency(parseFloat(invoice.paid.amount))} paid
+                      </p>
+                    )}
+                    {parseFloat(invoice.outstanding.amount) > 0 && (
+                      <p className={`text-xs ${isOverdue ? 'text-red-600 font-medium' : 'text-orange-600'}`}>
+                        {formatCurrency(parseFloat(invoice.outstanding.amount))} due
+                      </p>
+                    )}
+                  </div>
                 </div>
+              )
+            })}
+            
+            {financialData.invoices.length > 8 && (
+              <div className="text-center pt-2">
+                <p className="text-sm text-gray-500">
+                  Showing 8 of {financialData.invoices.length} invoices
+                </p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       )}

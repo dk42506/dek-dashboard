@@ -193,35 +193,13 @@ export default function AdminDashboard() {
                 </div>
               ))
             ) : (
-              <>
-                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                    <UserPlus className="h-4 w-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">New client added</p>
-                    <p className="text-xs text-gray-500">John's Auto Shop - 2 hours ago</p>
-                  </div>
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Building2 className="h-8 w-8 text-gray-400" />
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                    <Building2 className="h-4 w-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Client profile updated</p>
-                    <p className="text-xs text-gray-500">Sarah's Bakery - 5 hours ago</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                    <TrendingUp className="h-4 w-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Monthly report generated</p>
-                    <p className="text-xs text-gray-500">System - 1 day ago</p>
-                  </div>
-                </div>
-              </>
+                <p className="text-gray-500 text-sm mb-2">No recent activity</p>
+                <p className="text-gray-400 text-xs">Activity will appear here as you use the dashboard</p>
+              </div>
             )}
           </div>
         </div>

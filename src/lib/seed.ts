@@ -8,26 +8,21 @@ dotenv.config({ path: path.join(process.cwd(), '.env.local') })
 
 export async function seedDatabase() {
   try {
-    // Check if admin user already exists
-    const existingAdmin = await prisma.user.findUnique({
-      where: { email: process.env.ADMIN_EMAIL || 'admin@dekinnovations.com' }
+    // Remove any existing admin users
+    await prisma.user.deleteMany({
+      where: { role: 'ADMIN' }
     })
 
-    if (existingAdmin) {
-      console.log('Admin user already exists')
-      return
-    }
-
-    // Create admin user
+    // Create the new admin user
     const hashedPassword = await bcrypt.hash(
-      process.env.ADMIN_PASSWORD || 'admin123',
+      process.env.ADMIN_PASSWORD || 'DylanK6205',
       12
     )
 
     const admin = await prisma.user.create({
       data: {
-        name: 'DEK Admin',
-        email: process.env.ADMIN_EMAIL || 'admin@dekinnovations.com',
+        name: 'Dylan Keller',
+        email: process.env.ADMIN_EMAIL || 'dkeller@dekinnovations.com',
         password: hashedPassword,
         role: 'ADMIN',
         createdAt: new Date(),
@@ -36,65 +31,6 @@ export async function seedDatabase() {
     })
 
     console.log('Admin user created:', admin.email)
-
-    // Create some sample clients
-    const sampleClients = [
-      {
-        name: 'John Smith',
-        email: 'john@johnsautoshop.com',
-        businessName: "John's Auto Shop",
-        location: 'Baltimore, MD',
-        phone: '(410) 555-0123',
-        noteContent: 'Automotive repair shop, needs website redesign and SEO optimization.',
-        clientSince: new Date('2023-06-15'),
-      },
-      {
-        name: 'Sarah Johnson',
-        email: 'sarah@sarahsbakery.com',
-        businessName: "Sarah's Bakery",
-        location: 'Annapolis, MD',
-        phone: '(410) 555-0456',
-        noteContent: 'Local bakery, looking for social media marketing and online ordering system.',
-        clientSince: new Date('2023-08-22'),
-      },
-      {
-        name: 'Mike Wilson',
-        email: 'mike@wilsonplumbing.com',
-        businessName: 'Wilson Plumbing Services',
-        location: 'Columbia, MD',
-        phone: '(410) 555-0789',
-        noteContent: 'Plumbing contractor, needs lead generation and Google Ads management.',
-        clientSince: new Date('2023-11-10'),
-      },
-    ]
-
-    for (const clientData of sampleClients) {
-      const hashedClientPassword = await bcrypt.hash('client123', 12)
-      
-      const { noteContent, ...userData } = clientData
-      
-      const client = await prisma.user.create({
-        data: {
-          ...userData,
-          password: hashedClientPassword,
-          role: 'CLIENT',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }
-      })
-
-      // Create initial note for the client
-      if (noteContent) {
-        await prisma.note.create({
-          data: {
-            content: noteContent,
-            userId: client.id,
-          }
-        })
-      }
-    }
-
-    console.log('Sample clients created')
     console.log('Database seeded successfully!')
 
   } catch (error) {

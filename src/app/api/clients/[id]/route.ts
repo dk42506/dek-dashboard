@@ -157,14 +157,12 @@ export async function PUT(
     let lastChecked = clientData.lastChecked
 
     if (website !== clientData.website) {
-      console.log(`Website URL changed from "${clientData.website}" to "${website}"`)
+      // Website URL changed, updating monitoring setup
       
       // Delete old updown.io check if it exists
       if (clientData.updownToken) {
-        console.log(`Deleting old updown.io check: ${clientData.updownToken}`)
         try {
           await deleteUpdownCheck(clientData.updownToken)
-          console.log('Old updown.io check deleted successfully')
         } catch (error) {
           console.error('Error deleting old updown check:', error)
         }
@@ -173,7 +171,6 @@ export async function PUT(
       // Create new monitoring setup if new website is provided
       if (website && website.trim()) {
         try {
-          console.log(`Setting up monitoring for new website: ${website}`)
           websiteStatus = 'checking'
           lastChecked = new Date()
 
@@ -182,10 +179,8 @@ export async function PUT(
           if (updownCheck) {
             updownToken = updownCheck.token
             websiteStatus = updownCheck.down ? 'down' : 'up'
-            console.log(`New updown.io check created: ${updownToken}`)
           } else {
             // Fall back to basic ping
-            console.log('Falling back to basic ping monitoring')
             const pingResult = await monitorWebsite(website)
             websiteStatus = pingResult.status
             lastChecked = pingResult.lastChecked

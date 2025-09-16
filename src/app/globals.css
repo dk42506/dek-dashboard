@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent text selection globally */
+* {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection for input fields and editable content */
+input,
+textarea,
+[contenteditable="true"],
+.selectable {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
 /* Dark mode styles */
@@ -334,6 +353,31 @@
   box-shadow: 0 0 0 2px rgba(139, 125, 139, 0.2) !important;
 }
 
+/* Force error notification colors to stay light mode */
+.light .bg-red-50 {
+  background-color: #fef2f2 !important;
+}
+
+.light .border-red-200 {
+  border-color: #fecaca !important;
+}
+
+.light .text-red-600 {
+  color: #dc2626 !important;
+}
+
+.light .text-red-800 {
+  color: #991b1b !important;
+}
+
+.light .text-red-700 {
+  color: #b91c1c !important;
+}
+
+.light .text-red-400 {
+  color: #f87171 !important;
+}
+
 /* Fix button visibility in dark mode */
 .dark button {
   color: inherit !important;
@@ -372,4 +416,92 @@
 
 .dark .hover\:text-gray-800:hover {
   color: #d1d5db !important;
+}
+
+/* Fix notification dropdown backgrounds - ensure they're solid in both light and dark modes */
+.light [data-notification-dropdown] {
+  background-color: white !important;
+  opacity: 1 !important;
+}
+
+.light [data-notification-dropdown] .bg-white {
+  background-color: white !important;
+  opacity: 1 !important;
+}
+
+.light [data-notification-dropdown] .bg-blue-50 {
+  background-color: #eff6ff !important;
+  opacity: 1 !important;
+}
+
+.light [data-notification-dropdown] .bg-gray-50 {
+  background-color: #f9fafb !important;
+  opacity: 1 !important;
+}
+
+/* Dark mode notification dropdown backgrounds */
+.dark [data-notification-dropdown] {
+  background-color: #2d2d2d !important;
+  opacity: 1 !important;
+}
+
+.dark [data-notification-dropdown] .bg-white {
+  background-color: #2d2d2d !important;
+  opacity: 1 !important;
+}
+
+.dark [data-notification-dropdown] .bg-blue-50 {
+  background-color: #3a3a3a !important;
+  opacity: 1 !important;
+}
+
+.dark [data-notification-dropdown] .bg-gray-50 {
+  background-color: #404040 !important;
+  opacity: 1 !important;
+}
+
+/* Ensure notification dropdown is always opaque - fallback */
+[data-notification-dropdown] {
+  opacity: 1 !important;
+}
+
+/* Fix FreshBooks alert banner backgrounds in dark mode */
+.dark .bg-red-50 {
+  background-color: #7f1d1d !important; /* Dark red background */
+}
+
+.dark .border-red-200 {
+  border-color: #dc2626 !important; /* Red border */
+}
+
+.dark .text-red-800 {
+  color: #fca5a5 !important; /* Light red text */
+}
+
+.dark .text-red-700 {
+  color: #fecaca !important; /* Lighter red text */
+}
+
+.dark .text-red-600 {
+  color: #f87171 !important; /* Light red for icons */
+}
+
+.dark .text-red-400 {
+  color: #fca5a5 !important; /* Light red for close button */
+}
+
+.dark .hover\:text-red-600:hover {
+  color: #f87171 !important;
+}
+
+.dark .hover\:text-red-800:hover {
+  color: #fca5a5 !important;
+}
+
+.dark .bg-red-600 {
+  background-color: #dc2626 !important;
+}
+
+.dark .hover\:bg-red-700:hover {
+  background-color: #b91c1c !important;
 }

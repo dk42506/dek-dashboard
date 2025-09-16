@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { createUpdownCheck, pingWebsite } from '@/lib/website-monitor'
+import { createNewClientNotification } from '@/lib/notifications'
 
 export async function POST(request: NextRequest) {
   try {
@@ -107,29 +108,17 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Log email template to console
-    console.log('\n' + '='.repeat(60))
-    console.log('📧 EMAIL TEMPLATE FOR NEW CLIENT')
-    console.log('='.repeat(60))
-    console.log(`To: ${email}`)
-    console.log(`Subject: Welcome to DEK Innovations - Your Account is Ready`)
-    console.log('')
-    console.log(`Dear ${repName || businessName || 'Client'},`)
-    console.log('')
-    console.log(`Welcome to DEK Innovations! Your client account has been created and is ready to use.`)
-    console.log('')
-    console.log(`Here are your login credentials:`)
-    console.log(`• Website: ${process.env.NEXTAUTH_URL || 'http://localhost:3000'}`)
-    console.log(`• Email: ${email}`)
-    console.log(`• Temporary Password: ${password}`)
-    console.log('')
-    console.log(`For security reasons, please log in and change your password as soon as possible.`)
-    console.log('')
-    console.log(`If you have any questions or need assistance, please don't hesitate to contact us.`)
-    console.log('')
-    console.log(`Best regards,`)
-    console.log(`The DEK Innovations Team`)
-    console.log('='.repeat(60) + '\n')
+    // Create notification for new client
+    try {
+      await createNewClientNotification(businessName || clientName, client.id)
+    } catch (notificationError) {
+      console.error('Error creating notification:', notificationError)
+      // Don't fail the request if notification creation fails
+    }
+
+    // TODO: Implement email sending functionality
+    // Email template would be sent to: ${email}
+    // Subject: Welcome to DEK Innovations - Your Account is Ready
 
     // Remove password from response
     const { password: _, ...clientWithoutPassword } = client
