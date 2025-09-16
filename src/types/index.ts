@@ -69,6 +69,76 @@ export interface Note {
   userId: string
 }
 
+export interface AdminSettings {
+  id: string
+  userId: string
+  displayName: string | null
+  businessName: string | null
+  businessEmail: string | null
+  businessPhone: string | null
+  businessAddress: string | null
+  businessWebsite: string | null
+  defaultClientType: string | null
+  emailNotifications: boolean
+  clientUpdateNotifications: boolean
+  systemAlerts: boolean
+  websiteMonitoringAlerts: boolean
+  monthlyReportEmails: boolean
+  autoBackup: boolean
+  backupFrequency: string
+  sessionTimeout: number
+  compactMode: boolean
+  theme: string
+  timezone: string
+  dateFormat: string
+  currency: string
+  freshbooksClientId: string | null
+  freshbooksClientSecret: string | null
+  freshbooksAccessToken: string | null
+  freshbooksRefreshToken: string | null
+  freshbooksAccountId: string | null
+  freshbooksAutoSync: boolean
+  freshbooksSyncFrequency: string
+  updownApiKey: string | null
+  updownAutoSync: boolean
+  updownSyncFrequency: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface AdminSettingsFormData {
+  displayName?: string
+  businessName?: string
+  businessEmail?: string
+  businessPhone?: string
+  businessAddress?: string
+  businessWebsite?: string
+  defaultClientType?: string
+  emailNotifications: boolean
+  clientUpdateNotifications: boolean
+  systemAlerts: boolean
+  websiteMonitoringAlerts: boolean
+  monthlyReportEmails: boolean
+  autoBackup: boolean
+  backupFrequency: string
+  sessionTimeout: number
+  compactMode: boolean
+  theme: string
+  timezone: string
+  dateFormat: string
+  currency: string
+  freshbooksClientId?: string
+  freshbooksClientSecret?: string
+  freshbooksAccessToken?: string
+  freshbooksRefreshToken?: string
+  freshbooksAccountId?: string
+  freshbooksAutoSync: boolean
+  freshbooksSyncFrequency: string
+  updownApiKey?: string
+  updownAutoSync: boolean
+  updownSyncFrequency: string
+}
+
 export interface PlaceholderSection {
   title: string
   description: string

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ClientUser } from '@/types'
 import NotesSection from '@/components/admin/NotesSection'
+import FinancialSummary from '@/components/admin/FinancialSummary'
 import { getStatusDisplay } from '@/lib/website-monitor'
 
 export default function ClientProfilePage() {
@@ -321,21 +322,15 @@ export default function ClientProfilePage() {
           {/* Meeting Notes */}
           <NotesSection clientId={client.id} />
 
+          {/* Financial Summary */}
+          <FinancialSummary 
+            clientId={client.id} 
+            clientName={client.name || 'Unknown Client'} 
+            businessName={client.businessName || undefined}
+          />
+
           {/* Placeholder Sections */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Invoices Placeholder */}
-            <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 font-heading flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-green-500" />
-                Invoices
-              </h3>
-              <div className="text-center py-6">
-                <DollarSign className="h-10 w-10 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-500 mb-1">FreshBooks Integration</p>
-                <p className="text-xs text-gray-400">Coming in Phase 2</p>
-              </div>
-            </div>
-
             {/* Ads Performance Placeholder */}
             <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 font-heading flex items-center gap-2">
@@ -345,6 +340,19 @@ export default function ClientProfilePage() {
               <div className="text-center py-6">
                 <TrendingUp className="h-10 w-10 text-gray-300 mx-auto mb-2" />
                 <p className="text-sm text-gray-500 mb-1">GoHighLevel Integration</p>
+                <p className="text-xs text-gray-400">Coming in Phase 2</p>
+              </div>
+            </div>
+
+            {/* Projects Placeholder */}
+            <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 font-heading flex items-center gap-2">
+                <FileText className="h-5 w-5 text-purple-500" />
+                Projects
+              </h3>
+              <div className="text-center py-6">
+                <FileText className="h-10 w-10 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 mb-1">Project Management</p>
                 <p className="text-xs text-gray-400">Coming in Phase 2</p>
               </div>
             </div>

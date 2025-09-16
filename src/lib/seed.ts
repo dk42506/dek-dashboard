@@ -45,7 +45,7 @@ export async function seedDatabase() {
         businessName: "John's Auto Shop",
         location: 'Baltimore, MD',
         phone: '(410) 555-0123',
-        notes: 'Automotive repair shop, needs website redesign and SEO optimization.',
+        noteContent: 'Automotive repair shop, needs website redesign and SEO optimization.',
         clientSince: new Date('2023-06-15'),
       },
       {
@@ -54,7 +54,7 @@ export async function seedDatabase() {
         businessName: "Sarah's Bakery",
         location: 'Annapolis, MD',
         phone: '(410) 555-0456',
-        notes: 'Local bakery, looking for social media marketing and online ordering system.',
+        noteContent: 'Local bakery, looking for social media marketing and online ordering system.',
         clientSince: new Date('2023-08-22'),
       },
       {
@@ -63,7 +63,7 @@ export async function seedDatabase() {
         businessName: 'Wilson Plumbing Services',
         location: 'Columbia, MD',
         phone: '(410) 555-0789',
-        notes: 'Plumbing contractor, needs lead generation and Google Ads management.',
+        noteContent: 'Plumbing contractor, needs lead generation and Google Ads management.',
         clientSince: new Date('2023-11-10'),
       },
     ]
@@ -71,15 +71,27 @@ export async function seedDatabase() {
     for (const clientData of sampleClients) {
       const hashedClientPassword = await bcrypt.hash('client123', 12)
       
-      await prisma.user.create({
+      const { noteContent, ...userData } = clientData
+      
+      const client = await prisma.user.create({
         data: {
-          ...clientData,
+          ...userData,
           password: hashedClientPassword,
           role: 'CLIENT',
           createdAt: new Date(),
           updatedAt: new Date(),
         }
       })
+
+      // Create initial note for the client
+      if (noteContent) {
+        await prisma.note.create({
+          data: {
+            content: noteContent,
+            userId: client.id,
+          }
+        })
+      }
     }
 
     console.log('Sample clients created')

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { freshBooksService } from '@/lib/freshbooks'
 
 export async function GET() {
   try {
@@ -56,6 +57,25 @@ export async function GET() {
       ? Math.round((uptimeStats.up / uptimeStats.total) * 100) 
       : 0
 
+    // Try to get total revenue from FreshBooks
+    let totalRevenue = 0
+    try {
+      const settings = await prisma.adminSettings.findUnique({
+        where: { userId: session.user.id }
+      })
+
+      if (settings?.freshbooksAccessToken && settings?.freshbooksAccountId) {
+        await freshBooksService.initialize(session.user.id)
+        const invoices = await freshBooksService.getInvoices()
+        totalRevenue = invoices.reduce((sum, invoice) => 
+          sum + parseFloat(invoice.paid.amount), 0
+        )
+      }
+    } catch (error) {
+      console.error('Error fetching FreshBooks revenue:', error)
+      // Continue without revenue data
+    }
+
     // Get recent activity (last 10 client updates)
     const recentActivity = await prisma.user.findMany({
       where: {
@@ -89,6 +109,7 @@ export async function GET() {
       totalClients,
       activeClients,
       newThisMonth,
+      totalRevenue,
       uptimeStats: {
         ...uptimeStats,
         percentage: uptimePercentage
