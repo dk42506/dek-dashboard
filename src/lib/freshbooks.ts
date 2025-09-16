@@ -169,9 +169,9 @@ export class FreshBooksService {
   constructor() {
     this.clientId = process.env.FRESHBOOKS_CLIENT_ID || ''
     this.clientSecret = process.env.FRESHBOOKS_CLIENT_SECRET || ''
-    this.redirectUri = process.env.FRESHBOOKS_REDIRECT_URI || ''
+    this.redirectUri = process.env.FRESHBOOKS_REDIRECT_URI || 'https://dashboard.dekinnovations.com/api/freshbooks/callback'
     
-    if (!this.clientId || !this.clientSecret || !this.redirectUri) {
+    if (!this.clientId || !this.clientSecret) {
       console.warn('FreshBooks API credentials not fully configured')
     }
   }
