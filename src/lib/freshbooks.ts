@@ -356,20 +356,34 @@ export class FreshBooksService {
       const invoices = invoicesData.invoices
       const expenses = expensesData.expenses
 
-      // Calculate totals
+      // Calculate totals - check both status formats and include Auto-Paid
+      const paidStatuses = ['paid', 'auto-paid', 'autopaid']
       const totalRevenue = invoices
-        .filter(invoice => invoice.status === 4) // Paid invoices
+        .filter(invoice => {
+          const v3Status = invoice.v3_status?.toLowerCase()
+          const numericStatus = invoice.status === 4 // Traditional paid status
+          const isPaid = paidStatuses.includes(v3Status) || numericStatus
+          return isPaid
+        })
         .reduce((sum, invoice) => sum + parseFloat(invoice.amount.amount), 0)
 
       const totalExpenses = expenses
         .reduce((sum, expense) => sum + parseFloat(expense.amount.amount), 0)
 
       const outstandingInvoices = invoices
-        .filter(invoice => invoice.status === 2) // Sent invoices
-        .reduce((sum, invoice) => sum + parseFloat(invoice.amount.amount), 0)
+        .filter(invoice => {
+          const outstandingAmount = parseFloat(invoice.outstanding?.amount || '0')
+          return outstandingAmount > 0
+        })
+        .reduce((sum, invoice) => sum + parseFloat(invoice.outstanding?.amount || '0'), 0)
 
       const paidInvoices = invoices
-        .filter(invoice => invoice.status === 4) // Paid invoices
+        .filter(invoice => {
+          const v3Status = invoice.v3_status?.toLowerCase()
+          const numericStatus = invoice.status === 4
+          const isPaid = paidStatuses.includes(v3Status) || numericStatus
+          return isPaid
+        })
         .length
 
       const currency = invoices.length > 0 ? invoices[0].currency_code : 'USD'

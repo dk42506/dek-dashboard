@@ -41,9 +41,15 @@ export async function GET() {
         new Date(b.create_date).getTime() - new Date(a.create_date).getTime()
       )
 
-      // Get recent paid invoices
+      // Get recent paid invoices - include Auto-Paid and Paid statuses
+      const paidStatuses = ['paid', 'auto-paid', 'autopaid']
       const recentInvoices = sortedInvoices
-        .filter(invoice => invoice.v3_status === 'paid')
+        .filter(invoice => {
+          const v3Status = invoice.v3_status?.toLowerCase()
+          const numericStatus = invoice.status === 4
+          const isPaid = paidStatuses.includes(v3Status) || numericStatus
+          return isPaid
+        })
         .slice(0, 10)
 
       // Get upcoming invoices (sent but not paid, due in next 30 days)
@@ -105,8 +111,14 @@ export async function GET() {
               new Date(b.create_date).getTime() - new Date(a.create_date).getTime()
             )
 
+            const paidStatuses = ['paid', 'auto-paid', 'autopaid']
             const recentInvoices = sortedInvoices
-              .filter(invoice => invoice.v3_status === 'paid')
+              .filter(invoice => {
+                const v3Status = invoice.v3_status?.toLowerCase()
+                const numericStatus = invoice.status === 4
+                const isPaid = paidStatuses.includes(v3Status) || numericStatus
+                return isPaid
+              })
               .slice(0, 10)
 
             const now = new Date()
