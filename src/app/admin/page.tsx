@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Users, UserPlus, TrendingUp, Building2, AlertCircle, X } from 'lucide-react'
 import { DashboardStats } from '@/types'
 import UpdownStatsWidget from '@/components/admin/UpdownStatsWidget'
+import FreshBooksOverview from '@/components/admin/FreshBooksOverview'
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
@@ -211,22 +212,13 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Placeholder Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 font-heading">
-            Invoices Overview
-          </h3>
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="h-8 w-8 text-gray-400" />
-            </div>
-            <p className="text-gray-500 text-sm">
-              FreshBooks integration coming soon
-            </p>
-          </div>
-        </div>
+      {/* FreshBooks Overview - Full Width */}
+      <div className="grid grid-cols-1 gap-6">
+        <FreshBooksOverview />
+      </div>
 
+      {/* Other Integrations */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 font-heading">
             Ads Performance

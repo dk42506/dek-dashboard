@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { BarChart3, TrendingUp, DollarSign, Users, Calendar, Download, Filter, RefreshCw, AlertCircle, X } from 'lucide-react'
+import FreshBooksOverview from '@/components/admin/FreshBooksOverview'
 
 export default function ReportsPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -390,16 +391,17 @@ export default function ReportsPage() {
         </div>
       </div>
 
+      {/* FreshBooks Financial Overview */}
+      <div className="grid grid-cols-1 gap-6">
+        <FreshBooksOverview />
+      </div>
+
       {/* Future Integrations Notice */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
         <h3 className="text-lg font-semibold text-blue-900 mb-2">
           Coming in Phase 2
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-blue-800">
-          <div>
-            <h4 className="font-medium mb-1">FreshBooks Integration</h4>
-            <p>Real-time invoice and payment data</p>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
           <div>
             <h4 className="font-medium mb-1">GoHighLevel Analytics</h4>
             <p>Marketing and CRM performance metrics</p>
