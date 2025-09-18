@@ -313,7 +313,9 @@ export class FreshBooksService {
   // Get invoices
   async getInvoices(accountId: string, page = 1, perPage = 15): Promise<{ invoices: FreshBooksInvoice[]; total: number }> {
     try {
+      console.log(`Fetching invoices for account: ${accountId}`)
       const response = await this.makeRequest(`/accounting/account/${accountId}/invoices/invoices?page=${page}&per_page=${perPage}`)
+      console.log(`Invoice response:`, response.response?.result)
       return {
         invoices: response.response?.result?.invoices || [],
         total: response.response?.result?.total || 0
@@ -327,7 +329,9 @@ export class FreshBooksService {
   // Get expenses
   async getExpenses(accountId: string, page = 1, perPage = 15): Promise<{ expenses: FreshBooksExpense[]; total: number }> {
     try {
+      console.log(`Fetching expenses for account: ${accountId}`)
       const response = await this.makeRequest(`/accounting/account/${accountId}/expenses/expenses?page=${page}&per_page=${perPage}`)
+      console.log(`Expense response:`, response.response?.result)
       return {
         expenses: response.response?.result?.expenses || [],
         total: response.response?.result?.total || 0

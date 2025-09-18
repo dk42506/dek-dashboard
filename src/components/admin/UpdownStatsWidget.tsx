@@ -189,7 +189,7 @@ export default function UpdownStatsWidget() {
       {/* Action Buttons */}
       <div className="flex gap-2">
         <a
-          href="https://updown.io/dashboard"
+          href="https://updown.io/checks"
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 inline-flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition-colors text-sm"

@@ -43,12 +43,15 @@ export async function GET(request: NextRequest) {
         throw new Error('Failed to get user profile')
       }
 
-      // Extract account ID from user profile
-      const accountId = userProfile.response.id || userProfile.response.business_memberships?.[0]?.business?.account_id
+      // Extract account ID from user profile - use the business account_id, not the user id
+      const accountId = userProfile.response.business_memberships?.[0]?.business?.account_id
 
       if (!accountId) {
+        console.error('User profile:', JSON.stringify(userProfile.response, null, 2))
         throw new Error('Could not determine account ID from user profile')
       }
+
+      console.log('Using account ID:', accountId)
 
       // Store tokens and account ID in database
       await prisma.adminSettings.upsert({
