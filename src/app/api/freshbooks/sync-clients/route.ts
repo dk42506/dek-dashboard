@@ -29,16 +29,21 @@ export async function POST() {
     try {
       // Get all FreshBooks clients
       const freshbooksClients = await freshbooks.getClients(settings.freshbooksAccountId)
+      console.log('FreshBooks clients found:', freshbooksClients.length)
+      console.log('FreshBooks clients:', freshbooksClients.map(c => ({ id: c.id, email: c.email, first_name: c.first_name, last_name: c.last_name, company_name: c.company_name })))
       
       // Get all dashboard clients
       const dashboardClients = await prisma.user.findMany({
         where: { role: 'CLIENT' }
       })
+      console.log('Dashboard clients found:', dashboardClients.length)
 
       let syncResults = {
         imported: 0,
         updated: 0,
-        errors: [] as string[]
+        errors: [] as string[],
+        fbClientsFound: freshbooksClients.length,
+        dashboardClientsFound: dashboardClients.length
       }
 
       // Import FreshBooks clients that don't exist in dashboard

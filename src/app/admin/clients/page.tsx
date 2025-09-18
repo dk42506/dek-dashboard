@@ -57,7 +57,8 @@ export default function ClientsPage() {
 
       if (response.ok) {
         const result = await response.json()
-        alert(`Sync completed! Imported: ${result.results.imported}, Updated: ${result.results.updated}`)
+        const details = `Sync completed!\nFreshBooks clients found: ${result.results.fbClientsFound || 0}\nDashboard clients found: ${result.results.dashboardClientsFound || 0}\nImported: ${result.results.imported}\nUpdated: ${result.results.updated}`
+        alert(details)
         
         // Reload clients to show newly imported ones
         const clientsResponse = await fetch('/api/clients')
@@ -146,7 +147,7 @@ export default function ClientsPage() {
           <button
             onClick={handleSyncFreshBooks}
             disabled={isSyncing}
-            className={`inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors ${
+            className={`inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition-colors text-sm ${
               isSyncing ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
