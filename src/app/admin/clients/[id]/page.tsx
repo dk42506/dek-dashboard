@@ -374,18 +374,24 @@ export default function ClientProfilePage() {
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Total Projects</span>
-                <span className="font-semibold text-gray-900">-</span>
+                <span className="text-sm text-gray-600">FreshBooks ID</span>
+                <span className="font-semibold text-gray-900">
+                  {client.repName?.startsWith('FB-') ? client.repName.replace('FB-', '') : '-'}
+                </span>
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Total Revenue</span>
-                <span className="font-semibold text-green-600">-</span>
+                <span className="text-sm text-gray-600">Account Status</span>
+                <span className="font-semibold text-green-600">
+                  {client.repName?.startsWith('FB-') ? 'Synced' : 'Manual'}
+                </span>
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Last Contact</span>
-                <span className="font-semibold text-gray-900">-</span>
+                <span className="text-sm text-gray-600">Password Changed</span>
+                <span className={`font-semibold ${client.passwordChanged ? 'text-green-600' : 'text-orange-600'}`}>
+                  {client.passwordChanged ? 'Yes' : 'No'}
+                </span>
               </div>
             </div>
           </div>

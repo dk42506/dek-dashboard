@@ -43,10 +43,6 @@ export default function FinancialSummary({ clientId, clientName, businessName }:
         if (data.configured === false) {
           setIsConfigured(false)
           setError('FreshBooks integration not configured')
-        } else if (data.matched === false) {
-          setIsConfigured(true)
-          setIsMatched(false)
-          setError('No matching FreshBooks client found')
         } else {
           throw new Error(data.error || 'Failed to fetch financial data')
         }
@@ -55,7 +51,20 @@ export default function FinancialSummary({ clientId, clientName, businessName }:
 
       setIsConfigured(true)
       setIsMatched(true)
-      setFinancialData(data.financials)
+      
+      // Transform the FreshBooks data to match our component's expected format
+      const transformedData = {
+        totalInvoiced: data.financialData?.totalInvoiced || 0,
+        totalPaid: data.financialData?.totalPaid || 0,
+        totalOutstanding: data.financialData?.outstanding || 0,
+        totalExpenses: 0, // We don't have expense data yet
+        invoiceCount: data.financialData?.invoices?.length || 0,
+        expenseCount: 0,
+        invoices: data.financialData?.invoices || [],
+        expenses: []
+      }
+      
+      setFinancialData(transformedData)
     } catch (err) {
       console.error('Error fetching financial data:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch financial data')
@@ -252,19 +261,19 @@ export default function FinancialSummary({ clientId, clientName, businessName }:
             <div className="bg-green-50 rounded-lg p-3 text-center">
               <p className="text-sm font-medium text-green-800">Paid</p>
               <p className="text-lg font-bold text-green-900">
-                {financialData.invoices.filter(inv => inv.v3_status === 'paid').length}
+                {financialData.invoices.filter(inv => inv.status === 'paid' || inv.paid > 0).length}
               </p>
             </div>
             <div className="bg-orange-50 rounded-lg p-3 text-center">
               <p className="text-sm font-medium text-orange-800">Outstanding</p>
               <p className="text-lg font-bold text-orange-900">
-                {financialData.invoices.filter(inv => parseFloat(inv.outstanding.amount) > 0).length}
+                {financialData.invoices.filter(inv => inv.outstanding > 0).length}
               </p>
             </div>
             <div className="bg-blue-50 rounded-lg p-3 text-center">
-              <p className="text-sm font-medium text-blue-800">Draft</p>
+              <p className="text-sm font-medium text-blue-800">Total</p>
               <p className="text-lg font-bold text-blue-900">
-                {financialData.invoices.filter(inv => inv.v3_status === 'draft').length}
+                {financialData.invoices.length}
               </p>
             </div>
           </div>
@@ -273,8 +282,8 @@ export default function FinancialSummary({ clientId, clientName, businessName }:
           <div className="space-y-3">
             <h5 className="text-sm font-medium text-gray-700">Recent Invoices</h5>
             {financialData.invoices.slice(0, 8).map((invoice, index) => {
-              const isOverdue = invoice.v3_status !== 'paid' && 
-                parseFloat(invoice.outstanding.amount) > 0 && 
+              const isOverdue = invoice.status !== 'paid' && 
+                invoice.outstanding > 0 && 
                 new Date(invoice.due_date) < new Date()
               
               const getStatusColor = (status: string, isOverdue: boolean) => {
@@ -293,8 +302,8 @@ export default function FinancialSummary({ clientId, clientName, businessName }:
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <p className="font-medium text-gray-900">#{invoice.invoice_number}</p>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.v3_status, isOverdue)}`}>
-                        {isOverdue ? 'Overdue' : invoice.v3_status.charAt(0).toUpperCase() + invoice.v3_status.slice(1)}
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.status, isOverdue)}`}>
+                        {isOverdue ? 'Overdue' : invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                       </span>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -304,22 +313,19 @@ export default function FinancialSummary({ clientId, clientName, businessName }:
                         <span className="text-green-600">Paid: {formatDate(invoice.date_paid)}</span>
                       )}
                     </div>
-                    {invoice.notes && (
-                      <p className="text-sm text-gray-500 mt-1 truncate">{invoice.notes}</p>
-                    )}
                   </div>
                   <div className="text-right ml-4">
                     <p className="font-semibold text-gray-900 mb-1">
-                      {formatCurrency(parseFloat(invoice.amount.amount))}
+                      {formatCurrency(invoice.amount)}
                     </p>
-                    {parseFloat(invoice.paid.amount) > 0 && parseFloat(invoice.outstanding.amount) > 0 && (
+                    {invoice.paid > 0 && invoice.outstanding > 0 && (
                       <p className="text-xs text-blue-600">
-                        {formatCurrency(parseFloat(invoice.paid.amount))} paid
+                        {formatCurrency(invoice.paid)} paid
                       </p>
                     )}
-                    {parseFloat(invoice.outstanding.amount) > 0 && (
+                    {invoice.outstanding > 0 && (
                       <p className={`text-xs ${isOverdue ? 'text-red-600 font-medium' : 'text-orange-600'}`}>
-                        {formatCurrency(parseFloat(invoice.outstanding.amount))} due
+                        {formatCurrency(invoice.outstanding)} due
                       </p>
                     )}
                   </div>

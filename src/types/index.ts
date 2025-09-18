@@ -29,6 +29,9 @@ export interface ClientUser {
   websiteStatus: string | null
   lastChecked: Date | null
   updownToken: string | null
+  
+  // Password management
+  passwordChanged: boolean
 }
 
 export interface DashboardStats {
