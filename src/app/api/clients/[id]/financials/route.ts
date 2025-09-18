@@ -29,7 +29,8 @@ export async function GET(
         businessName: true,
         name: true,
         email: true,
-        repName: true, // Contains FreshBooks ID if synced
+        repName: true, // Contains FreshBooks ID if synced (legacy)
+        repRole: true, // Contains FreshBooks ID if synced (new location)
       }
     })
 
@@ -66,12 +67,15 @@ export async function GET(
       const invoicesData = await freshbooks.getInvoices(settings.freshbooksAccountId, 1, 100)
       const allInvoices = invoicesData.invoices
 
-      // Filter invoices for this client by email
+      // Filter invoices for this client by FreshBooks client ID
       const clientInvoices = allInvoices.filter(invoice => {
-        // Try to match by email or FreshBooks client ID
-        const fbClientId = client.repName?.replace('FB-', '')
+        // Get FreshBooks client ID from repRole field (where we store FB-xxx)
+        const fbClientId = client.repRole?.replace('FB-', '') || client.repName?.replace('FB-', '')
+        console.log(`Looking for invoices for client ID: ${fbClientId}, invoice clientid: ${invoice.clientid}`)
         return invoice.clientid?.toString() === fbClientId
       })
+      
+      console.log(`Found ${clientInvoices.length} invoices for client ${client.businessName}`)
 
       // Calculate financial summary
       const paidStatuses = ['paid', 'auto-paid', 'autopaid']

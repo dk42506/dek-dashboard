@@ -175,8 +175,8 @@ export default function ClientProfilePage() {
               </div>
               
               <div className="flex-1">
-                <h2 className="text-xl font-bold text-gray-900 mb-2">{client.name}</h2>
-                <p className="text-lg text-gray-700 mb-4">{client.businessName}</p>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">{client.businessName || 'Business Name Not Set'}</h2>
+                <p className="text-lg text-gray-700 mb-4">Client Profile</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center gap-3">
@@ -376,14 +376,15 @@ export default function ClientProfilePage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">FreshBooks ID</span>
                 <span className="font-semibold text-gray-900">
-                  {client.repName?.startsWith('FB-') ? client.repName.replace('FB-', '') : '-'}
+                  {client.repRole?.startsWith('FB-') ? client.repRole.replace('FB-', '') : 
+                   client.repName?.startsWith('FB-') ? client.repName.replace('FB-', '') : '-'}
                 </span>
               </div>
               
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Account Status</span>
                 <span className="font-semibold text-green-600">
-                  {client.repName?.startsWith('FB-') ? 'Synced' : 'Manual'}
+                  {(client.repRole?.startsWith('FB-') || client.repName?.startsWith('FB-')) ? 'Synced' : 'Manual'}
                 </span>
               </div>
               

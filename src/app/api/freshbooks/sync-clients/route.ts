@@ -83,8 +83,9 @@ export async function POST() {
                   website: fbClient.website || null,
                   clientSince: fbClient.created_at ? new Date(fbClient.created_at) : new Date(),
                   passwordChanged: false,
-                  // Store FreshBooks ID for future reference
-                  repName: `FB-${fbClient.id}`, // Temporary storage in repName field
+                  // Store FreshBooks ID in a proper field (using repRole temporarily)
+                  repRole: `FB-${fbClient.id}`, // Store FreshBooks ID here
+                  repName: null, // Keep representative name empty
                 }
               })
               
