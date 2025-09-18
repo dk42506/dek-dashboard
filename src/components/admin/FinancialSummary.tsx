@@ -36,10 +36,14 @@ export default function FinancialSummary({ clientId, clientName, businessName }:
       setIsLoading(true)
       setError(null)
 
+      console.log(`🔍 Fetching financial data for client: ${clientId}`)
       const response = await fetch(`/api/clients/${clientId}/financials`)
       const data = await response.json()
+      
+      console.log('📊 Financial API Response:', data)
 
       if (!response.ok) {
+        console.log('❌ API Error:', data)
         if (data.configured === false) {
           setIsConfigured(false)
           setError('FreshBooks integration not configured')
@@ -51,6 +55,9 @@ export default function FinancialSummary({ clientId, clientName, businessName }:
 
       setIsConfigured(true)
       setIsMatched(true)
+      
+      console.log('💰 Raw Financial Data:', data.financialData)
+      console.log('📋 Invoices Found:', data.financialData?.invoices?.length || 0)
       
       // Transform the FreshBooks data to match our component's expected format
       const transformedData = {
@@ -64,6 +71,7 @@ export default function FinancialSummary({ clientId, clientName, businessName }:
         expenses: []
       }
       
+      console.log('✅ Transformed Data:', transformedData)
       setFinancialData(transformedData)
     } catch (err) {
       console.error('Error fetching financial data:', err)
