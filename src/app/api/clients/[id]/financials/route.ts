@@ -67,12 +67,21 @@ export async function GET(
       const invoicesData = await freshbooks.getInvoices(settings.freshbooksAccountId, 1, 100)
       const allInvoices = invoicesData.invoices
 
+      // Get FreshBooks client ID from repRole field (where we store FB-xxx)
+      const fbClientId = client.repRole?.replace('FB-', '') || client.repName?.replace('FB-', '')
+      console.log(`Client ${client.businessName} has FreshBooks ID: ${fbClientId}`)
+      console.log(`Total invoices from FreshBooks: ${allInvoices.length}`)
+      
+      // Log all invoice client IDs for debugging
+      allInvoices.forEach((invoice, index) => {
+        console.log(`Invoice ${index + 1}: #${invoice.invoice_number}, clientid: ${invoice.clientid}, amount: ${invoice.amount?.amount}`)
+      })
+      
       // Filter invoices for this client by FreshBooks client ID
       const clientInvoices = allInvoices.filter(invoice => {
-        // Get FreshBooks client ID from repRole field (where we store FB-xxx)
-        const fbClientId = client.repRole?.replace('FB-', '') || client.repName?.replace('FB-', '')
-        console.log(`Looking for invoices for client ID: ${fbClientId}, invoice clientid: ${invoice.clientid}`)
-        return invoice.clientid?.toString() === fbClientId
+        const match = invoice.clientid?.toString() === fbClientId
+        console.log(`Invoice #${invoice.invoice_number}: clientid ${invoice.clientid} ${match ? 'MATCHES' : 'does not match'} ${fbClientId}`)
+        return match
       })
       
       console.log(`Found ${clientInvoices.length} invoices for client ${client.businessName}`)
