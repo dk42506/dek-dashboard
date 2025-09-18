@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { seedDatabase } from '@/lib/seed'
 
 export async function GET(request: NextRequest) {
+  // Security: Only allow in development or if no admin exists
+  const adminExists = await prisma.user.findFirst({
+    where: { role: 'ADMIN' }
+  })
+
+  if (adminExists && process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ 
+      error: 'Database already initialized' 
+    }, { status: 403 })
+  }
   try {
     // First, try to create the database tables by running a simple migration
     // This will create all tables if they don't exist

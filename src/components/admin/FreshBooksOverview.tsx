@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DollarSign, TrendingUp, FileText, AlertCircle, RefreshCw, Calendar, Clock } from 'lucide-react'
+import { DollarSign, TrendingUp, FileText, AlertCircle, RefreshCw, ExternalLink, Receipt } from 'lucide-react'
 
 interface FreshBooksData {
   totalRevenue: number
@@ -44,6 +44,10 @@ export default function FreshBooksOverview() {
     }
   }
 
+  const refreshData = () => {
+    fetchFreshBooksData()
+  }
+
   const formatCurrency = (amount: number, currency = 'USD') => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -59,25 +63,28 @@ export default function FreshBooksOverview() {
     })
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'paid': return 'text-green-600 bg-green-50'
-      case 'sent': return 'text-blue-600 bg-blue-50'
-      case 'draft': return 'text-gray-600 bg-gray-50'
-      case 'partial': return 'text-orange-600 bg-orange-50'
-      default: return 'text-gray-600 bg-gray-50'
-    }
+  const getNetIncomeStatus = (netIncome: number) => {
+    if (netIncome > 0) return 'Profitable'
+    if (netIncome === 0) return 'Break Even'
+    return 'Loss'
+  }
+
+  const getNetIncomeColor = (netIncome: number) => {
+    if (netIncome > 0) return 'text-green-600'
+    if (netIncome === 0) return 'text-yellow-600'
+    return 'text-red-600'
   }
 
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 font-heading">
-            FreshBooks Overview
+          <h3 className="text-lg font-semibold text-gray-900 font-heading flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-gray-600" />
+            Financial Overview
           </h3>
         </div>
-        <div className="flex items-center justify-center py-8">
+        <div className="h-32 flex items-center justify-center">
           <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
@@ -88,17 +95,27 @@ export default function FreshBooksOverview() {
     return (
       <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 font-heading">
-            FreshBooks Overview
+          <h3 className="text-lg font-semibold text-gray-900 font-heading flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-gray-600" />
+            Financial Overview
           </h3>
+          <button
+            onClick={refreshData}
+            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            title="Refresh data"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
         </div>
         <div className="text-center py-8">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h4 className="text-lg font-medium text-gray-900 mb-2">Error Loading Data</h4>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="h-8 w-8 text-gray-400" />
+          </div>
+          <p className="text-gray-500 text-sm mb-2">Unable to load financial data</p>
+          <p className="text-gray-400 text-xs mb-4">Check your FreshBooks connection</p>
           <button
-            onClick={fetchFreshBooksData}
-            className="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors"
+            onClick={refreshData}
+            className="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors text-sm"
           >
             <RefreshCw className="h-4 w-4" />
             Retry
@@ -116,11 +133,11 @@ export default function FreshBooksOverview() {
     <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900 font-heading flex items-center gap-2">
-          <DollarSign className="h-5 w-5 text-green-600" />
-          FreshBooks Overview
+          <DollarSign className="h-5 w-5 text-gray-600" />
+          Financial Overview
         </h3>
         <button
-          onClick={fetchFreshBooksData}
+          onClick={refreshData}
           className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
           title="Refresh data"
         >
@@ -128,113 +145,120 @@ export default function FreshBooksOverview() {
         </button>
       </div>
 
-      {/* Financial Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-green-50 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="h-4 w-4 text-green-600" />
-            <span className="text-sm font-medium text-green-800">Total Revenue</span>
+      {/* Main Financial Stats */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="text-center">
+          <div className="flex items-center justify-center mb-2">
+            <TrendingUp className="h-5 w-5 text-gray-500" />
           </div>
-          <p className="text-2xl font-bold text-green-900">
+          <div className="text-2xl font-bold text-gray-900">
             {formatCurrency(data.totalRevenue, data.currency)}
-          </p>
+          </div>
+          <div className="text-sm text-gray-600">Total Revenue</div>
         </div>
 
-        <div className="bg-red-50 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <FileText className="h-4 w-4 text-red-600" />
-            <span className="text-sm font-medium text-red-800">Total Expenses</span>
+        <div className="text-center">
+          <div className="flex items-center justify-center mb-2">
+            <Receipt className="h-5 w-5 text-gray-500" />
           </div>
-          <p className="text-2xl font-bold text-red-900">
+          <div className="text-2xl font-bold text-gray-900">
             {formatCurrency(data.totalExpenses, data.currency)}
-          </p>
+          </div>
+          <div className="text-sm text-gray-600">Total Expenses</div>
         </div>
 
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-800">Net Income</span>
+        <div className="text-center">
+          <div className="flex items-center justify-center mb-2">
+            <DollarSign className="h-5 w-5 text-gray-500" />
           </div>
-          <p className="text-2xl font-bold text-blue-900">
+          <div className={`text-2xl font-bold ${getNetIncomeColor(data.netIncome)}`}>
             {formatCurrency(data.netIncome, data.currency)}
-          </p>
-        </div>
-
-        <div className="bg-orange-50 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertCircle className="h-4 w-4 text-orange-600" />
-            <span className="text-sm font-medium text-orange-800">Outstanding</span>
           </div>
-          <p className="text-2xl font-bold text-orange-900">
-            {formatCurrency(data.outstandingInvoices, data.currency)}
-          </p>
+          <div className="text-sm text-gray-600">Net Income</div>
         </div>
       </div>
 
-      {/* Recent Invoices */}
-      {data.recentInvoices && data.recentInvoices.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-md font-semibold text-gray-900 flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-600" />
-              Recent Invoices
-            </h4>
-            <span className="text-sm text-gray-500">{data.paidInvoices} paid invoices</span>
+      {/* Financial Status */}
+      <div className="bg-gray-50 rounded-lg p-4 mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-700">Business Status</span>
+          <span className={`text-sm font-medium ${getNetIncomeColor(data.netIncome)}`}>
+            {getNetIncomeStatus(data.netIncome)}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex-1 bg-gray-200 rounded-full h-2">
+            <div 
+              className={`h-2 rounded-full transition-all duration-300 ${
+                data.netIncome > 0 ? 'bg-green-500' :
+                data.netIncome === 0 ? 'bg-yellow-500' : 'bg-red-500'
+              }`}
+              style={{ 
+                width: data.totalRevenue > 0 
+                  ? `${Math.max(10, Math.min(100, ((data.totalRevenue - data.totalExpenses) / data.totalRevenue) * 100))}%`
+                  : '0%'
+              }}
+            />
           </div>
-          
-          <div className="space-y-3">
-            {data.recentInvoices.slice(0, 5).map((invoice, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                    <p className="font-medium text-gray-900">#{invoice.invoice_number}</p>
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.v3_status)}`}>
-                      {invoice.v3_status.charAt(0).toUpperCase() + invoice.v3_status.slice(1)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
-                    <span>Created: {formatDate(invoice.create_date)}</span>
-                    {invoice.date_paid && (
-                      <span className="text-green-600">Paid: {formatDate(invoice.date_paid)}</span>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-gray-900">
-                    {formatCurrency(parseFloat(invoice.amount.amount), data.currency)}
-                  </p>
-                  {parseFloat(invoice.outstanding.amount) > 0 && (
-                    <p className="text-xs text-orange-600">
-                      {formatCurrency(parseFloat(invoice.outstanding.amount), data.currency)} due
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
+          <div className="text-sm text-gray-600">
+            {data.paidInvoices} paid invoices
           </div>
         </div>
-      )}
-
-      {/* Upcoming Invoices */}
-      {data.upcomingInvoices && data.upcomingInvoices.length > 0 && (
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-md font-semibold text-gray-900 flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-gray-600" />
-              Upcoming Due Dates
-            </h4>
+        {data.outstandingInvoices > 0 && (
+          <div className="text-xs text-gray-500 mt-2">
+            {formatCurrency(data.outstandingInvoices, data.currency)} outstanding
           </div>
-          
+        )}
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-2 mb-4">
+        <a
+          href="https://my.freshbooks.com/#/dashboard"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 inline-flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition-colors text-sm"
+        >
+          <ExternalLink className="h-4 w-4" />
+          View Dashboard
+        </a>
+        
+        {data.outstandingInvoices > 0 && (
+          <button className="flex-1 inline-flex items-center justify-center gap-2 bg-orange-50 hover:bg-orange-100 text-orange-700 px-3 py-2 rounded-lg transition-colors text-sm">
+            <AlertCircle className="h-4 w-4" />
+            Outstanding
+          </button>
+        )}
+        
+        {data.outstandingInvoices === 0 && data.paidInvoices > 0 && (
+          <button className="flex-1 inline-flex items-center justify-center gap-2 bg-green-50 hover:bg-green-100 text-green-700 px-3 py-2 rounded-lg transition-colors text-sm">
+            <TrendingUp className="h-4 w-4" />
+            All Paid
+          </button>
+        )}
+      </div>
+
+      {/* Recent Invoices (if any) */}
+      {data.recentInvoices && data.recentInvoices.length > 0 && (
+        <div className="pt-4 border-t border-gray-200">
+          <h4 className="text-sm font-medium text-gray-700 mb-2">Recent Activity</h4>
           <div className="space-y-2">
-            {data.upcomingInvoices.slice(0, 3).map((invoice, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">#{invoice.invoice_number}</p>
-                  <p className="text-sm text-gray-600">Due: {formatDate(invoice.due_date)}</p>
+            {data.recentInvoices.slice(0, 3).map((invoice, index) => (
+              <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm font-medium text-gray-900">
+                    #{invoice.invoice_number}
+                  </span>
                 </div>
-                <p className="font-semibold text-orange-900">
-                  {formatCurrency(parseFloat(invoice.outstanding.amount), data.currency)}
-                </p>
+                <div className="text-right">
+                  <div className="text-sm font-medium text-gray-900">
+                    {formatCurrency(parseFloat(invoice.amount.amount), data.currency)}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {formatDate(invoice.date_paid || invoice.create_date)}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
