@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { createUpdownCheck, pingWebsite } from '@/lib/website-monitor'
 import { createNewClientNotification } from '@/lib/notifications'
+import { freshbooks } from '@/lib/freshbooks'
 
 export async function POST(request: NextRequest) {
   try {
@@ -107,6 +108,44 @@ export async function POST(request: NextRequest) {
         updownToken,
       }
     })
+
+    // Try to create client in FreshBooks
+    let freshbooksClientId = null
+    try {
+      const settings = await prisma.adminSettings.findUnique({
+        where: { userId: session.user.id }
+      })
+
+      if (settings?.freshbooksAccessToken && settings?.freshbooksAccountId) {
+        freshbooks.setAccessToken(settings.freshbooksAccessToken)
+        
+        // Parse name into first and last name
+        const nameParts = clientName.split(' ')
+        const firstName = nameParts[0] || ''
+        const lastName = nameParts.slice(1).join(' ') || ''
+
+        const freshbooksClient = await freshbooks.createClient(settings.freshbooksAccountId, {
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          company_name: businessName,
+          business_phone: phone,
+          website: website
+        })
+
+        if (freshbooksClient) {
+          freshbooksClientId = freshbooksClient.id
+          // Update the client with FreshBooks ID
+          await prisma.user.update({
+            where: { id: client.id },
+            data: { repName: `FB-${freshbooksClient.id}` }
+          })
+        }
+      }
+    } catch (fbError) {
+      console.error('Error creating FreshBooks client:', fbError)
+      // Don't fail client creation if FreshBooks fails
+    }
 
     // Create notification for new client
     try {

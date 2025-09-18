@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Search, Plus, Filter, Eye, Edit, Trash2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, Search, Filter, MoreVertical, Globe, Phone, Mail, Calendar, User, Building2, RefreshCw, Edit, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ClientUser } from '@/types'
@@ -13,6 +13,7 @@ export default function ClientsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'name' | 'businessName' | 'clientSince'>('name')
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null)
+  const [isSyncing, setIsSyncing] = useState(false)
 
   useEffect(() => {
     // Load clients from API
@@ -46,6 +47,42 @@ export default function ClientsPage() {
 
     loadClients()
   }, [])
+
+  const handleSyncFreshBooks = async () => {
+    setIsSyncing(true)
+    try {
+      const response = await fetch('/api/freshbooks/sync-clients', {
+        method: 'POST',
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        alert(`Sync completed! Imported: ${result.results.imported}, Updated: ${result.results.updated}`)
+        
+        // Reload clients to show newly imported ones
+        const clientsResponse = await fetch('/api/clients')
+        if (clientsResponse.ok) {
+          const clientsData = await clientsResponse.json()
+          const processedClients = clientsData.map((client: any) => ({
+            ...client,
+            createdAt: new Date(client.createdAt),
+            updatedAt: new Date(client.updatedAt),
+            clientSince: client.clientSince ? new Date(client.clientSince) : null,
+            role: 'CLIENT'
+          }))
+          setClients(processedClients)
+        }
+      } else {
+        const error = await response.json()
+        alert(`Sync failed: ${error.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Error syncing FreshBooks clients:', error)
+      alert('Failed to sync FreshBooks clients. Please try again.')
+    } finally {
+      setIsSyncing(false)
+    }
+  }
 
   const handleDeleteClient = async (clientId: string, clientName: string) => {
     if (!confirm(`Are you sure you want to delete ${clientName}? This action cannot be undone.`)) {
@@ -105,13 +142,25 @@ export default function ClientsPage() {
             Manage your client relationships and profiles
           </p>
         </div>
-        <Link
-          href="/admin/clients/new"
-          className="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Add Client
-        </Link>
+        <div className="flex gap-2">
+          <button
+            onClick={handleSyncFreshBooks}
+            disabled={isSyncing}
+            className={`inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors ${
+              isSyncing ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Syncing...' : 'Sync FreshBooks'}
+          </button>
+          <Link
+            href="/admin/clients/new"
+            className="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Add Client
+          </Link>
+        </div>
       </div>
 
       {/* Search and Filters */}
