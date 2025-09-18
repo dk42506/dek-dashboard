@@ -57,7 +57,12 @@ export default function ClientsPage() {
 
       if (response.ok) {
         const result = await response.json()
-        const details = `Sync completed!\nFreshBooks clients found: ${result.results.fbClientsFound || 0}\nDashboard clients found: ${result.results.dashboardClientsFound || 0}\nImported: ${result.results.imported}\nUpdated: ${result.results.updated}`
+        let details = `Sync completed!\nFreshBooks clients found: ${result.results.fbClientsFound || 0}\nDashboard clients found: ${result.results.dashboardClientsFound || 0}\nImported: ${result.results.imported}\nUpdated: ${result.results.updated}`
+        
+        if (result.results.errors && result.results.errors.length > 0) {
+          details += `\n\nErrors:\n${result.results.errors.join('\n')}`
+        }
+        
         alert(details)
         
         // Reload clients to show newly imported ones

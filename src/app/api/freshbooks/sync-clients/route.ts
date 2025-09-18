@@ -55,29 +55,46 @@ export async function POST() {
           )
 
           if (!existingClient) {
-            // Generate a temporary password for the new client
-            const tempPassword = Math.random().toString(36).slice(-8)
-            const bcrypt = require('bcryptjs')
-            const hashedPassword = await bcrypt.hash(tempPassword, 12)
+            try {
+              // Generate a temporary password for the new client
+              const tempPassword = Math.random().toString(36).slice(-8)
+              const bcrypt = require('bcryptjs')
+              const hashedPassword = await bcrypt.hash(tempPassword, 12)
 
-            // Create new client in dashboard
-            await prisma.user.create({
-              data: {
+              console.log(`Attempting to create client: ${fbClient.email}`)
+              console.log(`Client data:`, {
                 email: fbClient.email,
                 name: `${fbClient.first_name} ${fbClient.last_name}`.trim(),
-                password: hashedPassword,
-                role: 'CLIENT',
-                businessName: fbClient.company_name || null,
-                phone: fbClient.business_phone || fbClient.mobile_phone || null,
-                website: fbClient.website || null,
-                clientSince: new Date(fbClient.created_at),
-                passwordChanged: false,
-                // Store FreshBooks ID for future reference
-                repName: `FB-${fbClient.id}`, // Temporary storage in repName field
-              }
-            })
-            syncResults.imported++
-            console.log(`Created client ${fbClient.email} with temp password: ${tempPassword}`)
+                businessName: fbClient.company_name,
+                phone: fbClient.business_phone || fbClient.mobile_phone,
+                website: fbClient.website,
+                created_at: fbClient.created_at
+              })
+
+              // Create new client in dashboard
+              const newClient = await prisma.user.create({
+                data: {
+                  email: fbClient.email,
+                  name: `${fbClient.first_name} ${fbClient.last_name}`.trim(),
+                  password: hashedPassword,
+                  role: 'CLIENT',
+                  businessName: fbClient.company_name || null,
+                  phone: fbClient.business_phone || fbClient.mobile_phone || null,
+                  website: fbClient.website || null,
+                  clientSince: fbClient.created_at ? new Date(fbClient.created_at) : new Date(),
+                  passwordChanged: false,
+                  // Store FreshBooks ID for future reference
+                  repName: `FB-${fbClient.id}`, // Temporary storage in repName field
+                }
+              })
+              
+              syncResults.imported++
+              console.log(`Successfully created client ${fbClient.email} with ID: ${newClient.id}`)
+              console.log(`Temp password: ${tempPassword}`)
+            } catch (createError: any) {
+              console.error(`Failed to create client ${fbClient.email}:`, createError)
+              syncResults.errors.push(`Failed to create ${fbClient.email}: ${createError.message || 'Unknown error'}`)
+            }
           } else {
             // Update existing client with FreshBooks data if missing
             const updateData: any = {}
