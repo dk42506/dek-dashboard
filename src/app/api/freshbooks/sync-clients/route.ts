@@ -50,21 +50,29 @@ export async function POST() {
           )
 
           if (!existingClient) {
+            // Generate a temporary password for the new client
+            const tempPassword = Math.random().toString(36).slice(-8)
+            const bcrypt = require('bcryptjs')
+            const hashedPassword = await bcrypt.hash(tempPassword, 12)
+
             // Create new client in dashboard
             await prisma.user.create({
               data: {
                 email: fbClient.email,
                 name: `${fbClient.first_name} ${fbClient.last_name}`.trim(),
+                password: hashedPassword,
                 role: 'CLIENT',
                 businessName: fbClient.company_name || null,
                 phone: fbClient.business_phone || fbClient.mobile_phone || null,
                 website: fbClient.website || null,
                 clientSince: new Date(fbClient.created_at),
+                passwordChanged: false,
                 // Store FreshBooks ID for future reference
                 repName: `FB-${fbClient.id}`, // Temporary storage in repName field
               }
             })
             syncResults.imported++
+            console.log(`Created client ${fbClient.email} with temp password: ${tempPassword}`)
           } else {
             // Update existing client with FreshBooks data if missing
             const updateData: any = {}
