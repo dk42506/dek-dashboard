@@ -175,7 +175,7 @@ export default function ClientProfilePage() {
               </div>
               
               <div className="flex-1">
-                <h2 className="text-xl font-bold text-gray-900 mb-2">{client.businessName || 'Business Name Not Set'}</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">{client.businessName || client.name || 'Unknown Client'}</h2>
                 <p className="text-lg text-gray-700 mb-4">Client Profile</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -233,6 +233,19 @@ export default function ClientProfilePage() {
                 </div>
               </div>
 
+              {(client.repRole?.startsWith('FB-') || client.repName?.startsWith('FB-')) && (
+                <div className="flex items-center gap-3">
+                  <DollarSign className="h-4 w-4 text-gray-400" />
+                  <div>
+                    <p className="text-sm text-gray-500">FreshBooks ID</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {client.repRole?.startsWith('FB-') ? client.repRole.replace('FB-', '') : 
+                       client.repName?.startsWith('FB-') ? client.repName.replace('FB-', '') : '-'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {client.website && (
                 <div className="flex items-center gap-3">
                   <Globe className="h-4 w-4 text-gray-400" />
@@ -265,7 +278,7 @@ export default function ClientProfilePage() {
           </div>
 
           {/* Representative Contact */}
-          {(client.repName || client.repEmail || client.repPhone) && (
+          {((client.repName && !client.repName.startsWith('FB-')) || client.repEmail || client.repPhone) && (
             <div className="bg-white rounded-xl p-6 shadow-soft border border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 font-heading flex items-center gap-2">
                 <UserCheck className="h-5 w-5 text-purple-500" />
