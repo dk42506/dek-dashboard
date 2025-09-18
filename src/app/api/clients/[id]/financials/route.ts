@@ -74,13 +74,17 @@ export async function GET(
       
       // Log all invoice client IDs for debugging
       allInvoices.forEach((invoice, index) => {
-        console.log(`Invoice ${index + 1}: #${invoice.invoice_number}, clientid: ${invoice.clientid}, amount: ${invoice.amount?.amount}`)
+        console.log(`Invoice ${index + 1}: #${invoice.invoice_number}, clientid: "${invoice.clientid}" (type: ${typeof invoice.clientid}), amount: ${invoice.amount?.amount}`)
       })
+      
+      console.log(`Looking for matches with FreshBooks ID: "${fbClientId}" (type: ${typeof fbClientId})`)
       
       // Filter invoices for this client by FreshBooks client ID
       const clientInvoices = allInvoices.filter(invoice => {
-        const match = invoice.clientid?.toString() === fbClientId
-        console.log(`Invoice #${invoice.invoice_number}: clientid ${invoice.clientid} ${match ? 'MATCHES' : 'does not match'} ${fbClientId}`)
+        const invoiceClientId = invoice.clientid?.toString()
+        const storedClientId = fbClientId?.toString()
+        const match = invoiceClientId === storedClientId
+        console.log(`Invoice #${invoice.invoice_number}: clientid "${invoiceClientId}" ${match ? 'MATCHES' : 'does not match'} "${storedClientId}"`)
         return match
       })
       
