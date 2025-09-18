@@ -11,11 +11,11 @@ export async function POST() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Find all clients with FreshBooks IDs in repName field
+    // Find all clients with FreshBooks IDs in repRole field (need to move back to repName)
     const clientsToMigrate = await prisma.user.findMany({
       where: {
         role: 'CLIENT',
-        repName: {
+        repRole: {
           startsWith: 'FB-'
         }
       }
@@ -25,16 +25,16 @@ export async function POST() {
 
     let migrated = 0
     for (const client of clientsToMigrate) {
-      if (client.repName?.startsWith('FB-')) {
+      if (client.repRole?.startsWith('FB-')) {
         await prisma.user.update({
           where: { id: client.id },
           data: {
-            repRole: client.repName, // Move FB-xxx to repRole
-            repName: null // Clear repName
+            repName: client.repRole, // Move FB-xxx back to repName
+            repRole: null // Clear repRole
           }
         })
         migrated++
-        console.log(`Migrated client ${client.email}: ${client.repName} -> repRole`)
+        console.log(`Migrated client ${client.email}: ${client.repRole} -> repName`)
       }
     }
 

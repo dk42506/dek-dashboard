@@ -254,7 +254,7 @@ export default function ClientsPage() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900">{client.businessName || client.name || 'Unknown'}</h3>
-                        <p className="text-sm text-gray-600">{client.businessName ? (client.name || 'No contact name') : 'No business name'}</p>
+                        <p className="text-sm text-gray-600">{client.email}</p>
                         <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
                           <span>{client.email}</span>
                           <span>{client.location}</span>
