@@ -147,31 +147,127 @@ export async function POST() {
 
     } catch (fbError: any) {
       console.error('FreshBooks API error:', fbError)
+      console.error('Error message:', fbError.message)
+      console.error('Error includes 401?', fbError.message?.includes('401'))
+      console.error('Has refresh token?', !!settings.freshbooksRefreshToken)
       
       // If token is expired, try to refresh it
       if (fbError.message?.includes('401') && settings.freshbooksRefreshToken) {
+        console.log('Attempting to refresh FreshBooks token...')
         try {
           const newAccessToken = await freshbooks.refreshAccessToken(settings.freshbooksRefreshToken)
           if (newAccessToken) {
+            console.log('Token refreshed successfully!')
             // Update the stored access token
             await prisma.adminSettings.update({
               where: { userId: session.user.id },
               data: { freshbooksAccessToken: newAccessToken }
             })
             
-            return NextResponse.json({
-              error: 'Token refreshed, please try again',
+            // Retry the sync with the new token
+            freshbooks.setAccessToken(newAccessToken)
+            const freshbooksClients = await freshbooks.getClients(settings.freshbooksAccountId)
+            
+            const dashboardClients = await prisma.user.findMany({
+              where: { role: 'CLIENT' }
+            })
+
+            let syncResults = {
+              imported: 0,
+              updated: 0,
+              errors: [] as string[],
+              fbClientsFound: freshbooksClients.length,
+              dashboardClientsFound: dashboardClients.length,
               tokenRefreshed: true
-            }, { status: 401 })
+            }
+
+            // Process clients (same loop as above)
+            for (const fbClient of freshbooksClients) {
+              try {
+                const existingClient = dashboardClients.find(
+                  client => {
+                    const emailMatch = client.email.toLowerCase() === fbClient.email.toLowerCase()
+                    const fbIdMatch = client.repRole === fbClient.id.toString() || client.repName === `FB-${fbClient.id}`
+                    return emailMatch || fbIdMatch
+                  }
+                )
+
+                if (!existingClient) {
+                  try {
+                    const tempPassword = Math.random().toString(36).slice(-8)
+                    const bcrypt = require('bcryptjs')
+                    const hashedPassword = await bcrypt.hash(tempPassword, 12)
+
+                    await prisma.user.create({
+                      data: {
+                        email: fbClient.email,
+                        name: `${fbClient.first_name} ${fbClient.last_name}`.trim(),
+                        password: hashedPassword,
+                        role: 'CLIENT',
+                        businessName: fbClient.company_name || null,
+                        phone: fbClient.business_phone || fbClient.mobile_phone || null,
+                        website: fbClient.website || null,
+                        clientSince: fbClient.created_at ? new Date(fbClient.created_at) : new Date(),
+                        passwordChanged: false,
+                        repRole: fbClient.id.toString(),
+                        repName: null,
+                      }
+                    })
+                    syncResults.imported++
+                  } catch (createError: any) {
+                    syncResults.errors.push(`Failed to create ${fbClient.email}: ${createError.message || 'Unknown error'}`)
+                  }
+                } else {
+                  const updateData: any = {}
+                  
+                  if (!existingClient.businessName && fbClient.company_name) {
+                    updateData.businessName = fbClient.company_name
+                  }
+                  if (!existingClient.phone && (fbClient.business_phone || fbClient.mobile_phone)) {
+                    updateData.phone = fbClient.business_phone || fbClient.mobile_phone
+                  }
+                  if (!existingClient.website && fbClient.website) {
+                    updateData.website = fbClient.website
+                  }
+                  if (!existingClient.repRole || existingClient.repRole !== fbClient.id.toString()) {
+                    updateData.repRole = fbClient.id.toString()
+                  }
+                  if (existingClient.repName?.startsWith('FB-')) {
+                    updateData.repName = null
+                  }
+
+                  if (Object.keys(updateData).length > 0) {
+                    await prisma.user.update({
+                      where: { id: existingClient.id },
+                      data: updateData
+                    })
+                    syncResults.updated++
+                  }
+                }
+              } catch (clientError) {
+                syncResults.errors.push(`Failed to sync ${fbClient.email}`)
+              }
+            }
+
+            return NextResponse.json({
+              success: true,
+              message: 'Client sync completed (after token refresh)',
+              results: syncResults
+            })
           }
         } catch (refreshError) {
           console.error('Failed to refresh FreshBooks token:', refreshError)
+          return NextResponse.json({ 
+            error: 'FreshBooks token expired and refresh failed. Please reconnect FreshBooks.',
+            details: refreshError instanceof Error ? refreshError.message : 'Unknown error'
+          }, { status: 401 })
         }
       }
       
       return NextResponse.json({ 
-        error: 'Failed to sync with FreshBooks',
-        details: fbError.message
+        error: 'Failed to sync with FreshBooks. Your FreshBooks connection may have expired.',
+        details: fbError.message,
+        suggestion: 'Try reconnecting FreshBooks from Settings'
       }, { status: 500 })
     }
 
