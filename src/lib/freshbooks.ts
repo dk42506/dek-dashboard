@@ -302,8 +302,18 @@ export class FreshBooksService {
   // Get clients
   async getClients(accountId: string): Promise<FreshBooksClient[]> {
     try {
+      console.log(`Fetching clients for account: ${accountId}`)
       const response = await this.makeRequest(`/accounting/account/${accountId}/users/clients`)
-      return response.response?.result?.clients || []
+      console.log('FreshBooks clients API response:', JSON.stringify(response, null, 2))
+      
+      const clients = response.response?.result?.clients || []
+      console.log(`Found ${clients.length} clients in response`)
+      
+      // Filter only active clients (vis_state: 0 means active)
+      const activeClients = clients.filter((c: FreshBooksClient) => c.vis_state === 0)
+      console.log(`Filtered to ${activeClients.length} active clients`)
+      
+      return activeClients
     } catch (error) {
       console.error('Error fetching clients:', error)
       return []

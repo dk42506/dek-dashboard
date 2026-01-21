@@ -67,24 +67,25 @@ export async function GET(
       const invoicesData = await freshbooks.getInvoices(settings.freshbooksAccountId, 1, 100)
       const allInvoices = invoicesData.invoices
 
-      // Get FreshBooks client ID from repRole field (where we store FB-xxx)
-      const fbClientId = client.repRole?.replace('FB-', '') || client.repName?.replace('FB-', '')
-      console.log(`Client ${client.businessName} has FreshBooks ID: ${fbClientId}`)
+      // Get FreshBooks client ID from repRole field (stored as plain number string)
+      // Fallback to legacy repName field if needed (format: FB-xxxxx)
+      const fbClientId = client.repRole || client.repName?.replace('FB-', '')
+      console.log(`Client ${client.businessName || client.name} (${client.email}) has FreshBooks ID: ${fbClientId}`)
       console.log(`Total invoices from FreshBooks: ${allInvoices.length}`)
       
-      // Log all invoice client IDs for debugging
-      allInvoices.forEach((invoice, index) => {
-        console.log(`Invoice ${index + 1}: #${invoice.invoice_number}, clientid: "${invoice.clientid}" (type: ${typeof invoice.clientid}), amount: ${invoice.amount?.amount}`)
-      })
-      
-      console.log(`Looking for matches with FreshBooks ID: "${fbClientId}" (type: ${typeof fbClientId})`)
+      if (!fbClientId) {
+        console.warn(`No FreshBooks ID found for client ${client.businessName || client.name}. Client may not be synced.`)
+      }
       
       // Filter invoices for this client by FreshBooks client ID
       const clientInvoices = allInvoices.filter(invoice => {
+        if (!fbClientId) return false
         const invoiceClientId = invoice.clientid?.toString()
-        const storedClientId = fbClientId?.toString()
+        const storedClientId = fbClientId.toString()
         const match = invoiceClientId === storedClientId
-        console.log(`Invoice #${invoice.invoice_number}: clientid "${invoiceClientId}" ${match ? 'MATCHES' : 'does not match'} "${storedClientId}"`)
+        if (match) {
+          console.log(`✓ Invoice #${invoice.invoice_number} matches client (clientid: ${invoiceClientId})`)
+        }
         return match
       })
       

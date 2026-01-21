@@ -233,14 +233,13 @@ export default function ClientProfilePage() {
                 </div>
               </div>
 
-              {(client.repRole?.startsWith('FB-') || client.repName?.startsWith('FB-')) && (
+              {(client.repRole || client.repName?.startsWith('FB-')) && (
                 <div className="flex items-center gap-3">
                   <DollarSign className="h-4 w-4 text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-500">FreshBooks ID</p>
                     <p className="text-sm font-medium text-gray-900">
-                      {client.repRole?.startsWith('FB-') ? client.repRole.replace('FB-', '') : 
-                       client.repName?.startsWith('FB-') ? client.repName.replace('FB-', '') : '-'}
+                      {client.repRole || client.repName?.replace('FB-', '') || '-'}
                     </p>
                   </div>
                 </div>
@@ -389,15 +388,14 @@ export default function ClientProfilePage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">FreshBooks ID</span>
                 <span className="font-semibold text-gray-900">
-                  {client.repRole?.startsWith('FB-') ? client.repRole.replace('FB-', '') : 
-                   client.repName?.startsWith('FB-') ? client.repName.replace('FB-', '') : '-'}
+                  {client.repRole || client.repName?.replace('FB-', '') || '-'}
                 </span>
               </div>
               
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Account Status</span>
                 <span className="font-semibold text-green-600">
-                  {(client.repRole?.startsWith('FB-') || client.repName?.startsWith('FB-')) ? 'Synced' : 'Manual'}
+                  {(client.repRole || client.repName?.startsWith('FB-')) ? 'Synced' : 'Manual'}
                 </span>
               </div>
               

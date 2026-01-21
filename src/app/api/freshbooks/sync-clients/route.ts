@@ -49,9 +49,13 @@ export async function POST() {
       // Import FreshBooks clients that don't exist in dashboard
       for (const fbClient of freshbooksClients) {
         try {
-          // Check if client already exists by email
+          // Check if client already exists by email OR by FreshBooks ID
           const existingClient = dashboardClients.find(
-            client => client.email.toLowerCase() === fbClient.email.toLowerCase()
+            client => {
+              const emailMatch = client.email.toLowerCase() === fbClient.email.toLowerCase()
+              const fbIdMatch = client.repRole === fbClient.id.toString() || client.repName === `FB-${fbClient.id}`
+              return emailMatch || fbIdMatch
+            }
           )
 
           if (!existingClient) {
@@ -68,6 +72,7 @@ export async function POST() {
                 businessName: fbClient.company_name,
                 phone: fbClient.business_phone || fbClient.mobile_phone,
                 website: fbClient.website,
+                freshbooksId: fbClient.id,
                 created_at: fbClient.created_at
               })
 
@@ -83,9 +88,9 @@ export async function POST() {
                   website: fbClient.website || null,
                   clientSince: fbClient.created_at ? new Date(fbClient.created_at) : new Date(),
                   passwordChanged: false,
-                  // Store FreshBooks ID in repName field for now (will be moved later)
-                  repName: `FB-${fbClient.id}`, // Store FreshBooks ID here
-                  repRole: null, // Keep role empty
+                  // Store FreshBooks ID directly as string in repRole field
+                  repRole: fbClient.id.toString(),
+                  repName: null,
                 }
               })
               
@@ -109,8 +114,14 @@ export async function POST() {
             if (!existingClient.website && fbClient.website) {
               updateData.website = fbClient.website
             }
-            if (!existingClient.repName) {
-              updateData.repName = `FB-${fbClient.id}` // Store FreshBooks ID
+            // Always update FreshBooks ID to ensure it's correct
+            if (!existingClient.repRole || existingClient.repRole !== fbClient.id.toString()) {
+              updateData.repRole = fbClient.id.toString()
+              console.log(`Updating FreshBooks ID for ${fbClient.email}: ${fbClient.id}`)
+            }
+            // Clear old repName field if it has FB- prefix
+            if (existingClient.repName?.startsWith('FB-')) {
+              updateData.repName = null
             }
 
             if (Object.keys(updateData).length > 0) {
@@ -119,6 +130,7 @@ export async function POST() {
                 data: updateData
               })
               syncResults.updated++
+              console.log(`Updated client ${fbClient.email} with FreshBooks data`)
             }
           }
         } catch (clientError) {
