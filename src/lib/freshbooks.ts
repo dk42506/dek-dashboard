@@ -273,7 +273,10 @@ export class FreshBooksService {
       throw new Error('No access token available')
     }
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    const url = `${this.baseUrl}${endpoint}`
+    console.log(`Making FreshBooks API request to: ${url}`)
+
+    const response = await fetch(url, {
       ...options,
       headers: {
         'Authorization': `Bearer ${this.accessToken}`,
@@ -282,8 +285,12 @@ export class FreshBooksService {
       }
     })
 
+    console.log(`FreshBooks API response status: ${response.status} ${response.statusText}`)
+
     if (!response.ok) {
-      throw new Error(`FreshBooks API error: ${response.status} ${response.statusText}`)
+      const errorBody = await response.text()
+      console.error(`FreshBooks API error body:`, errorBody)
+      throw new Error(`FreshBooks API error: ${response.status} ${response.statusText} - ${errorBody}`)
     }
 
     return response.json()
@@ -304,18 +311,33 @@ export class FreshBooksService {
     try {
       console.log(`Fetching clients for account: ${accountId}`)
       const response = await this.makeRequest(`/accounting/account/${accountId}/users/clients`)
-      console.log('FreshBooks clients API response:', JSON.stringify(response, null, 2))
+      console.log('FreshBooks clients API FULL response:', JSON.stringify(response, null, 2))
       
       const clients = response.response?.result?.clients || []
-      console.log(`Found ${clients.length} clients in response`)
+      console.log(`Found ${clients.length} total clients in response`)
       
+      // Log each client's vis_state to understand the data
+      if (clients.length > 0) {
+        clients.forEach((c: FreshBooksClient, i: number) => {
+          console.log(`Client ${i + 1}: ${c.fname} ${c.lname} (${c.email}), vis_state: ${c.vis_state}, id: ${c.id}`)
+        })
+      } else {
+        console.log('No clients found in response. Response structure:', {
+          hasResponse: !!response.response,
+          hasResult: !!response.response?.result,
+          resultKeys: response.response?.result ? Object.keys(response.response.result) : 'no result'
+        })
+      }
+      
+      // Return ALL clients for now (remove filtering to debug)
       // Filter only active clients (vis_state: 0 means active)
-      const activeClients = clients.filter((c: FreshBooksClient) => c.vis_state === 0)
-      console.log(`Filtered to ${activeClients.length} active clients`)
+      // const activeClients = clients.filter((c: FreshBooksClient) => c.vis_state === 0)
+      // console.log(`Filtered to ${activeClients.length} active clients`)
       
-      return activeClients
-    } catch (error) {
+      return clients
+    } catch (error: any) {
       console.error('Error fetching clients:', error)
+      console.error('Error details:', error.message, error.stack)
       return []
     }
   }

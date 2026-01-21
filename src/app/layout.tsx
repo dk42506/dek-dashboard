@@ -18,7 +18,11 @@ export const metadata: Metadata = {
   description: 'Client management dashboard for DEK Innovations',
   keywords: ['dashboard', 'client management', 'DEK Innovations'],
   authors: [{ name: 'DEK Innovations' }],
-  viewport: 'width=device-width, initial-scale=1',
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({
