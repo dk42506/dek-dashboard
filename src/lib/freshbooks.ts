@@ -38,6 +38,7 @@ interface FreshBooksInvoice {
   accountid: string
   invoice_number: string
   clientid: number
+  customerid?: number
   create_date: string
   amount: {
     amount: string

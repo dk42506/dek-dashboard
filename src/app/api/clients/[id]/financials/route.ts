@@ -80,11 +80,13 @@ export async function GET(
       // Filter invoices for this client by FreshBooks client ID
       const clientInvoices = allInvoices.filter(invoice => {
         if (!fbClientId) return false
-        const invoiceClientId = invoice.clientid?.toString()
+        const invoiceClientId = (invoice.clientid ?? invoice.customerid)?.toString()
         const storedClientId = fbClientId.toString()
         const match = invoiceClientId === storedClientId
         if (match) {
-          console.log(`✓ Invoice #${invoice.invoice_number} matches client (clientid: ${invoiceClientId})`)
+          console.log(`✓ Invoice #${invoice.invoice_number} matches client (clientid/customerid: ${invoiceClientId})`)
+        } else {
+          console.log(`Invoice #${invoice.invoice_number} clientid=${invoice.clientid} customerid=${invoice.customerid} did not match ${storedClientId}`)
         }
         return match
       })
@@ -139,7 +141,7 @@ export async function GET(
         lastPayment: lastPaymentDate,
         invoices: processedInvoices,
         currency: processedInvoices.length > 0 ? processedInvoices[0].currency : 'USD',
-        freshbooksClientId: client.repName?.replace('FB-', '') || null
+        freshbooksClientId: client.repRole || client.repName?.replace('FB-', '') || null
       }
 
       return NextResponse.json({
