@@ -337,8 +337,9 @@ export class FreshBooksService {
       return clients
     } catch (error: any) {
       console.error('Error fetching clients:', error)
-      console.error('Error details:', error.message, error.stack)
-      return []
+      console.error('Error details:', error.message)
+      // Re-throw the error so the caller can handle token refresh
+      throw error
     }
   }
 
@@ -354,7 +355,8 @@ export class FreshBooksService {
       }
     } catch (error) {
       console.error('Error fetching invoices:', error)
-      return { invoices: [], total: 0 }
+      // Re-throw the error so the caller can handle token refresh
+      throw error
     }
   }
 
