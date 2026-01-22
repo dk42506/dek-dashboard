@@ -88,11 +88,16 @@ export async function GET() {
     } catch (fbError: any) {
       console.error('FreshBooks API error:', fbError)
       
-      // If token is expired, try to refresh it
-      if (fbError.message?.includes('401') && settings.freshbooksRefreshToken) {
+      // If token is expired (401 error), try to refresh it
+      const is401Error = fbError.message?.includes('401 Unauthorized') || fbError.message?.includes('401')
+      
+      if (is401Error && settings.freshbooksRefreshToken) {
+        console.log('Attempting to refresh FreshBooks access token...')
         try {
           const newAccessToken = await freshbooks.refreshAccessToken(settings.freshbooksRefreshToken)
+          
           if (newAccessToken) {
+            console.log('Successfully refreshed FreshBooks access token, updating database...')
             // Update the stored access token
             await prisma.adminSettings.update({
               where: { userId: session.user.id },
@@ -100,6 +105,7 @@ export async function GET() {
             })
             
             // Retry the API call with new token
+            console.log('Retrying FreshBooks API calls with new token...')
             freshbooks.setAccessToken(newAccessToken)
             const [financialSummary, invoicesData] = await Promise.all([
               freshbooks.getFinancialSummary(settings.freshbooksAccountId),
@@ -151,9 +157,21 @@ export async function GET() {
             }
 
             return NextResponse.json(response)
+          } else {
+            console.error('Failed to obtain new access token from refresh token')
+            return NextResponse.json({ 
+              error: 'FreshBooks token refresh failed',
+              details: 'Unable to refresh access token. Please reconnect FreshBooks.',
+              connected: false
+            }, { status: 401 })
           }
         } catch (refreshError) {
           console.error('Failed to refresh FreshBooks token:', refreshError)
+          return NextResponse.json({ 
+            error: 'FreshBooks token refresh failed',
+            details: refreshError instanceof Error ? refreshError.message : 'Unknown refresh error',
+            connected: false
+          }, { status: 401 })
         }
       }
       

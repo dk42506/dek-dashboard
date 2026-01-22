@@ -38,6 +38,8 @@ export default function SettingsPage() {
   const [isFetching, setIsFetching] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [freshbooksConnected, setFreshbooksConnected] = useState(false)
+  const [checkingFreshbooks, setCheckingFreshbooks] = useState(false)
   const [settings, setSettings] = useState<AdminSettingsFormData>({
     displayName: '',
     businessName: '',
@@ -74,6 +76,20 @@ export default function SettingsPage() {
   useEffect(() => {
     fetchSettings()
   }, [])
+
+  const checkFreshbooksConnection = async () => {
+    try {
+      setCheckingFreshbooks(true)
+      const response = await fetch('/api/freshbooks/overview')
+      const data = await response.json()
+      setFreshbooksConnected(data.connected === true)
+    } catch (error) {
+      console.error('Error checking FreshBooks connection:', error)
+      setFreshbooksConnected(false)
+    } finally {
+      setCheckingFreshbooks(false)
+    }
+  }
 
   const fetchSettings = async () => {
     try {
@@ -120,6 +136,13 @@ export default function SettingsPage() {
       // Update theme context if different
       if (data.theme !== theme) {
         setTheme(data.theme as 'light' | 'dark' | 'system')
+      }
+      
+      // Check FreshBooks connection status
+      if (data.freshbooksAccessToken && data.freshbooksAccountId) {
+        checkFreshbooksConnection()
+      } else {
+        setFreshbooksConnected(false)
       }
     } catch (error) {
       console.error('Error fetching settings:', error)
@@ -566,12 +589,15 @@ export default function SettingsPage() {
                 <span className="text-xs text-green-600">Connected</span>
               </div>
               
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+              <div className={`flex items-center justify-between p-3 rounded-lg ${freshbooksConnected ? 'bg-green-50' : 'bg-red-50'}`}>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm font-medium text-green-800">FreshBooks</span>
+                  <div className={`w-2 h-2 rounded-full ${freshbooksConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className={`text-sm font-medium ${freshbooksConnected ? 'text-green-800' : 'text-red-800'}`}>FreshBooks</span>
+                  {checkingFreshbooks && <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>}
                 </div>
-                <span className="text-xs text-green-600">Connected</span>
+                <span className={`text-xs ${freshbooksConnected ? 'text-green-600' : 'text-red-600'}`}>
+                  {freshbooksConnected ? 'Connected' : 'Disconnected'}
+                </span>
               </div>
             </div>
           </div>
