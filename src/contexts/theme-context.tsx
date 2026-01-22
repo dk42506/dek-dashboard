@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -13,21 +14,46 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const { data: session } = useSession()
   const [theme, setTheme] = useState<Theme>('light')
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
 
+  // Fetch theme from server on mount or when session changes
   useEffect(() => {
-    // Load theme from localStorage on mount
-    const savedTheme = localStorage.getItem('theme') as Theme
-    if (savedTheme) {
-      setTheme(savedTheme)
-    } else {
-      // Check system preference
-      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      setTheme('system')
-      setResolvedTheme(systemPrefersDark ? 'dark' : 'light')
+    const loadTheme = async () => {
+      try {
+        // First check localStorage (for quick load)
+        const savedTheme = localStorage.getItem('theme') as Theme
+        if (savedTheme) {
+          setTheme(savedTheme)
+        }
+
+        // If user is logged in, fetch their theme preference from server
+        if (session?.user?.id) {
+          const response = await fetch('/api/admin/settings')
+          if (response.ok) {
+            const data = await response.json()
+            if (data.theme) {
+              setTheme(data.theme as Theme)
+              localStorage.setItem('theme', data.theme)
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading theme preference:', error)
+        // Fall back to localStorage or system preference
+        const savedTheme = localStorage.getItem('theme') as Theme
+        if (savedTheme) {
+          setTheme(savedTheme)
+        } else {
+          setTheme('system')
+        }
+      }
     }
-  }, [])
+
+    loadTheme()
+  }, [session?.user?.id])
+
 
   useEffect(() => {
     const root = window.document.documentElement

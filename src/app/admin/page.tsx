@@ -92,17 +92,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl p-6 text-white">
-        <h1 className="text-3xl font-bold font-heading mb-2">
-          Welcome to DEK Innovations Dashboard
-        </h1>
-        <p className="text-primary-100">
-          Manage your clients and track your business growth from one central location.
-        </p>
-      </div>
-
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat) => (

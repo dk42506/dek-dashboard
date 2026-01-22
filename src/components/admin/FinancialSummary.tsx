@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DollarSign, TrendingUp, FileText, AlertCircle, RefreshCw } from 'lucide-react'
+import { DollarSign, TrendingUp, FileText, AlertCircle, RefreshCw, ChevronDown } from 'lucide-react'
 
 interface FinancialData {
   totalInvoiced: number
@@ -26,6 +26,7 @@ export default function FinancialSummary({ clientId, clientName, businessName }:
   const [error, setError] = useState<string | null>(null)
   const [isConfigured, setIsConfigured] = useState(false)
   const [isMatched, setIsMatched] = useState(false)
+  const [invoicesExpanded, setInvoicesExpanded] = useState(false)
 
   useEffect(() => {
     fetchFinancialData()
@@ -259,98 +260,108 @@ export default function FinancialSummary({ clientId, clientName, businessName }:
       {/* Invoice Overview */}
       {financialData.invoices.length > 0 && (
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-md font-semibold text-gray-900">Invoice Overview</h4>
-            <span className="text-sm text-gray-500">{financialData.invoices.length} total invoices</span>
-          </div>
+          <button
+            onClick={() => setInvoicesExpanded(!invoicesExpanded)}
+            className="w-full flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <h4 className="text-md font-semibold text-gray-900">Invoice Overview</h4>
+              <span className="text-sm text-gray-500">{financialData.invoices.length} total invoices</span>
+            </div>
+            <ChevronDown 
+              className={`h-5 w-5 text-gray-600 transition-transform ${invoicesExpanded ? 'rotate-180' : ''}`}
+            />
+          </button>
           
-          {/* Invoice Status Summary */}
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            <div className="bg-green-50 rounded-lg p-3 text-center">
-              <p className="text-sm font-medium text-green-800">Paid</p>
-              <p className="text-lg font-bold text-green-900">
-                {financialData.invoices.filter(inv => inv.status === 'paid' || inv.paid > 0).length}
-              </p>
-            </div>
-            <div className="bg-orange-50 rounded-lg p-3 text-center">
-              <p className="text-sm font-medium text-orange-800">Outstanding</p>
-              <p className="text-lg font-bold text-orange-900">
-                {financialData.invoices.filter(inv => inv.outstanding > 0).length}
-              </p>
-            </div>
-            <div className="bg-blue-50 rounded-lg p-3 text-center">
-              <p className="text-sm font-medium text-blue-800">Total</p>
-              <p className="text-lg font-bold text-blue-900">
-                {financialData.invoices.length}
-              </p>
-            </div>
-          </div>
-
-          {/* Recent Invoices List */}
-          <div className="space-y-3">
-            <h5 className="text-sm font-medium text-gray-700">Recent Invoices</h5>
-            {financialData.invoices.slice(0, 8).map((invoice, index) => {
-              const isOverdue = invoice.status !== 'paid' && 
-                invoice.outstanding > 0 && 
-                new Date(invoice.due_date) < new Date()
-              
-              const getStatusColor = (status: string, isOverdue: boolean) => {
-                if (isOverdue) return 'text-red-600 bg-red-50'
-                switch (status) {
-                  case 'paid': return 'text-green-600 bg-green-50'
-                  case 'sent': return 'text-blue-600 bg-blue-50'
-                  case 'draft': return 'text-gray-600 bg-gray-50'
-                  case 'partial': return 'text-orange-600 bg-orange-50'
-                  default: return 'text-gray-600 bg-gray-50'
-                }
-              }
-
-              return (
-                <div key={index} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <p className="font-medium text-gray-900">#{invoice.invoice_number}</p>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.status, isOverdue)}`}>
-                        {isOverdue ? 'Overdue' : invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <span>Created: {formatDate(invoice.create_date)}</span>
-                      <span>Due: {formatDate(invoice.due_date)}</span>
-                      {invoice.date_paid && (
-                        <span className="text-green-600">Paid: {formatDate(invoice.date_paid)}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right ml-4">
-                    <p className="font-semibold text-gray-900 mb-1">
-                      {formatCurrency(invoice.amount)}
-                    </p>
-                    {invoice.paid > 0 && invoice.outstanding > 0 && (
-                      <p className="text-xs text-blue-600">
-                        {formatCurrency(invoice.paid)} paid
-                      </p>
-                    )}
-                    {invoice.outstanding > 0 && (
-                      <p className={`text-xs ${isOverdue ? 'text-red-600 font-medium' : 'text-orange-600'}`}>
-                        {formatCurrency(invoice.outstanding)} due
-                      </p>
-                    )}
-                  </div>
+          {invoicesExpanded && (
+            <>
+              {/* Invoice Status Summary */}
+              <div className="grid grid-cols-3 gap-4 mb-4 mt-4">
+                <div className="bg-green-50 rounded-lg p-3 text-center">
+                  <p className="text-sm font-medium text-green-800">Paid</p>
+                  <p className="text-lg font-bold text-green-900">
+                    {financialData.invoices.filter(inv => inv.status === 'paid' || inv.paid > 0).length}
+                  </p>
                 </div>
-              )
-            })}
-            
-            {financialData.invoices.length > 8 && (
-              <div className="text-center pt-2">
-                <p className="text-sm text-gray-500">
-                  Showing 8 of {financialData.invoices.length} invoices
-                </p>
+                <div className="bg-orange-50 rounded-lg p-3 text-center">
+                  <p className="text-sm font-medium text-orange-800">Outstanding</p>
+                  <p className="text-lg font-bold text-orange-900">
+                    {financialData.invoices.filter(inv => inv.outstanding > 0).length}
+                  </p>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-3 text-center">
+                  <p className="text-sm font-medium text-blue-800">Total</p>
+                  <p className="text-lg font-bold text-blue-900">
+                    {financialData.invoices.length}
+                  </p>
+                </div>
               </div>
-            )}
-          </div>
-        </div>
-      )}
+
+              {/* Recent Invoices List */}
+              <div className="space-y-3">
+                <h5 className="text-sm font-medium text-gray-700">Recent Invoices</h5>
+                {financialData.invoices.slice(0, 8).map((invoice, index) => {
+                  const isOverdue = invoice.status !== 'paid' && 
+                    invoice.outstanding > 0 && 
+                    new Date(invoice.due_date) < new Date()
+                  
+                  const getStatusColor = (status: string, isOverdue: boolean) => {
+                    if (isOverdue) return 'text-red-600 bg-red-50'
+                    switch (status) {
+                      case 'paid': return 'text-green-600 bg-green-50'
+                      case 'sent': return 'text-blue-600 bg-blue-50'
+                      case 'draft': return 'text-gray-600 bg-gray-50'
+                      case 'partial': return 'text-orange-600 bg-orange-50'
+                      default: return 'text-gray-600 bg-gray-50'
+                    }
+                  }
+
+                  return (
+                    <div key={index} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <p className="font-medium text-gray-900">#{invoice.invoice_number}</p>
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.status, isOverdue)}`}>
+                            {isOverdue ? 'Overdue' : invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <span>Created: {formatDate(invoice.create_date)}</span>
+                          <span>Due: {formatDate(invoice.due_date)}</span>
+                          {invoice.date_paid && (
+                            <span className="text-green-600">Paid: {formatDate(invoice.date_paid)}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right ml-4">
+                        <p className="font-semibold text-gray-900 mb-1">
+                          {formatCurrency(invoice.amount)}
+                        </p>
+                        {invoice.paid > 0 && invoice.outstanding > 0 && (
+                          <p className="text-xs text-blue-600">
+                            {formatCurrency(invoice.paid)} paid
+                          </p>
+                        )}
+                        {invoice.outstanding > 0 && (
+                          <p className={`text-xs ${isOverdue ? 'text-red-600 font-medium' : 'text-orange-600'}`}>
+                            {formatCurrency(invoice.outstanding)} due
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+                
+                {financialData.invoices.length > 8 && (
+                  <div className="text-center pt-2">
+                    <p className="text-sm text-gray-500">
+                      Showing 8 of {financialData.invoices.length} invoices
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
       {/* Summary Stats */}
       <div className="flex items-center justify-between text-sm text-gray-600 pt-4 border-t border-gray-200">

@@ -135,6 +135,25 @@ export default function ClientProfilePage() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
+  }
+
+  if (!client) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-600 mb-4">Client not found</p>
+        <Link href="/admin/clients" className="text-primary-500 hover:underline">
+          Back to Clients
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -147,7 +166,7 @@ export default function ClientProfilePage() {
         </Link>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-900 font-heading">
-            {client.name || 'Unknown Client'}
+            {client.businessName || client.name || 'Unknown Client'}
           </h1>
           <p className="text-gray-600">
             Client profile and business information
