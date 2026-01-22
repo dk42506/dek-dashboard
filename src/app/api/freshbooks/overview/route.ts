@@ -160,18 +160,33 @@ export async function GET() {
           } else {
             console.error('Failed to obtain new access token from refresh token')
             return NextResponse.json({ 
-              error: 'FreshBooks token refresh failed',
-              details: 'Unable to refresh access token. Please reconnect FreshBooks.',
+              error: 'FreshBooks authentication expired',
+              details: 'Please reconnect your FreshBooks account from Settings.',
+              requiresReconnect: true,
               connected: false
             }, { status: 401 })
           }
-        } catch (refreshError) {
+        } catch (refreshError: any) {
           console.error('Failed to refresh FreshBooks token:', refreshError)
+          
+          // If refresh token is invalid (400 error), user needs to reconnect
+          const isRefreshTokenInvalid = refreshError.message?.includes('400') || refreshError.message?.includes('invalid_grant')
+          
+          if (isRefreshTokenInvalid) {
+            console.error('Refresh token is invalid/expired - user must reconnect FreshBooks')
+            return NextResponse.json({ 
+              error: 'FreshBooks authentication expired',
+              details: 'Your FreshBooks connection has expired. Please reconnect from Settings.',
+              requiresReconnect: true,
+              connected: false
+            }, { status: 401 })
+          }
+          
           return NextResponse.json({ 
-            error: 'FreshBooks token refresh failed',
+            error: 'Failed to refresh FreshBooks token',
             details: refreshError instanceof Error ? refreshError.message : 'Unknown refresh error',
             connected: false
-          }, { status: 401 })
+          }, { status: 500 })
         }
       }
       

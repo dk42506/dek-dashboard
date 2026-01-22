@@ -40,6 +40,7 @@ export default function SettingsPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [freshbooksConnected, setFreshbooksConnected] = useState(false)
   const [checkingFreshbooks, setCheckingFreshbooks] = useState(false)
+  const [freshbooksError, setFreshbooksError] = useState<string | null>(null)
   const [settings, setSettings] = useState<AdminSettingsFormData>({
     displayName: '',
     businessName: '',
@@ -80,12 +81,23 @@ export default function SettingsPage() {
   const checkFreshbooksConnection = async () => {
     try {
       setCheckingFreshbooks(true)
+      setFreshbooksError(null)
       const response = await fetch('/api/freshbooks/overview')
       const data = await response.json()
-      setFreshbooksConnected(data.connected === true)
+      
+      if (data.requiresReconnect) {
+        setFreshbooksConnected(false)
+        setFreshbooksError(data.details || 'FreshBooks authentication expired')
+      } else {
+        setFreshbooksConnected(data.connected === true)
+        if (!data.connected) {
+          setFreshbooksError(data.details || 'Failed to connect to FreshBooks')
+        }
+      }
     } catch (error) {
       console.error('Error checking FreshBooks connection:', error)
       setFreshbooksConnected(false)
+      setFreshbooksError('Failed to check connection')
     } finally {
       setCheckingFreshbooks(false)
     }
@@ -191,6 +203,25 @@ export default function SettingsPage() {
       ...prev,
       [key]: value
     }))
+  }
+
+  const handleReconnectFreshbooks = async () => {
+    try {
+      setCheckingFreshbooks(true)
+      const response = await fetch('/api/freshbooks/auth-url')
+      const data = await response.json()
+      
+      if (data.authUrl) {
+        window.location.href = data.authUrl
+      } else {
+        setFreshbooksError('Failed to generate authorization URL')
+      }
+    } catch (error) {
+      console.error('Error reconnecting FreshBooks:', error)
+      setFreshbooksError('Failed to reconnect FreshBooks')
+    } finally {
+      setCheckingFreshbooks(false)
+    }
   }
 
   if (isFetching) {
@@ -589,15 +620,29 @@ export default function SettingsPage() {
                 <span className="text-xs text-green-600">Connected</span>
               </div>
               
-              <div className={`flex items-center justify-between p-3 rounded-lg ${freshbooksConnected ? 'bg-green-50' : 'bg-red-50'}`}>
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${freshbooksConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                  <span className={`text-sm font-medium ${freshbooksConnected ? 'text-green-800' : 'text-red-800'}`}>FreshBooks</span>
-                  {checkingFreshbooks && <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>}
+              <div>
+                <div className={`flex items-center justify-between p-3 rounded-lg ${freshbooksConnected ? 'bg-green-50' : 'bg-red-50'}`}>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${freshbooksConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <span className={`text-sm font-medium ${freshbooksConnected ? 'text-green-800' : 'text-red-800'}`}>FreshBooks</span>
+                    {checkingFreshbooks && <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>}
+                  </div>
+                  <span className={`text-xs ${freshbooksConnected ? 'text-green-600' : 'text-red-600'}`}>
+                    {freshbooksConnected ? 'Connected' : 'Disconnected'}
+                  </span>
                 </div>
-                <span className={`text-xs ${freshbooksConnected ? 'text-green-600' : 'text-red-600'}`}>
-                  {freshbooksConnected ? 'Connected' : 'Disconnected'}
-                </span>
+                
+                {freshbooksError && (
+                  <div className="mt-2 p-2 bg-red-50 rounded border border-red-200">
+                    <p className="text-xs text-red-700 mb-2">{freshbooksError}</p>
+                    <button
+                      onClick={handleReconnectFreshbooks}
+                      className="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors"
+                    >
+                      Reconnect FreshBooks
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
