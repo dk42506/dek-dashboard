@@ -362,6 +362,8 @@ export default function FinancialSummary({ clientId, clientName, businessName }:
               </div>
             </>
           )}
+        </div>
+      )}
 
       {/* Summary Stats */}
       <div className="flex items-center justify-between text-sm text-gray-600 pt-4 border-t border-gray-200">
